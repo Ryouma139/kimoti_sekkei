@@ -1,0 +1,30 @@
+---
+import { url } from '../lib/url';
+import { monthDay, ymd } from '../lib/dates';
+import type { TechEntry } from '../lib/data';
+
+interface Props {
+  entry: TechEntry;
+  minutes: number;
+}
+
+const STATUS = { plan: '計画中', run: '進行中', done: '完了' } as const;
+const { entry, minutes } = Astro.props;
+const { title, icon, status = 'plan', progress = 0, stack, date, updated } = entry.data;
+---
+
+<a class="pcard" href={url(`/tech/${entry.id}/`)}>
+  <div class="ph">
+    <span class="ico">{icon ?? title.slice(0, 2)}</span>
+    <div class="ph-text">
+      <h3>{title}</h3>
+      <span class:list={['status', status]}>{STATUS[status]}</span>
+    </div>
+  </div>
+  <div class="prog" role="img" aria-label={`進捗${progress}%`}><i style={`width:${progress}%`} /></div>
+  <div class="m num">
+    <span>進捗 {progress}%</span>
+    <span>学習 {Math.round((minutes / 60) * 10) / 10}h ・ 更新 {monthDay(ymd(updated ?? date))}</span>
+  </div>
+  {stack.length > 0 && <div class="chips">{stack.map((s) => <span class="chip">{s}</span>)}</div>}
+</a>

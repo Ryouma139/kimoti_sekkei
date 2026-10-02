@@ -1,0 +1,25 @@
+---
+import { FACES, MOODS, type Mood } from '../lib/moods';
+
+interface Props {
+  mood?: Mood;
+  /** CSSのサイズ（例: "56px"）。省略時は .blob の既定値 */
+  size?: string;
+  class?: string;
+}
+
+const { mood, size, class: className } = Astro.props;
+const style = [mood ? `--c:${MOODS[mood].color}` : '--c:var(--line)', size ? `--s:${size}` : '']
+  .filter(Boolean)
+  .join(';');
+---
+
+{
+  mood ? (
+    <span class:list={['blob', mood, className]} style={style} role="img" aria-label={MOODS[mood].label}>
+      <svg viewBox="0 0 60 60" fill="var(--face)" aria-hidden="true" set:html={FACES[mood]} />
+    </span>
+  ) : (
+    <span class:list={['blob', className]} style={style} aria-hidden="true" />
+  )
+}

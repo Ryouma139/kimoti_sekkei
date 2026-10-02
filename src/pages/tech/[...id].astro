@@ -1,0 +1,89 @@
+---
+import { render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import TagList from '../../components/TagList.astro';
+import { getLearn, getTech } from '../../lib/data';
+import { dotted, formatMinutes, ymd } from '../../lib/dates';
+import { url } from '../../lib/url';
+
+export async function getStaticPaths() {
+  const tech = await getTech();
+  return tech.map((entry) => ({ params: { id: entry.id }, props: { entry } }));
+}
+
+const STATUS = { plan: '計画中', run: '進行中', done: '完了' } as const;
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const isProject = entry.data.type === 'project';
+const related = isProject ? (await getLearn()).filter((e) => e.data.project === entry.id) : [];
+const relatedMinutes = related.reduce((s, e) => s + e.data.minutes, 0);
+---
+
+<BaseLayout title={entry.data.title} current="tech">
+  <article class="view">
+    <a class="back" href={url(isProject ? '/tech/' : '/tech/#notes')}>← テックノート</a>
+    <header class="post-head" style="--c:var(--tech-soft)">
+      <div class="head" style="color:var(--fg)">
+        <span class="meta num">
+          {isProject ? 'プロジェクト' : '考え方メモ'} ・ {dotted(ymd(entry.data.date))}
+          {entry.data.updated && `（更新 ${dotted(ymd(entry.data.updated))}）`}
+        </span>
+        <h1>{entry.data.title}</h1>
+        {entry.data.summary && <p>{entry.data.summary}</p>}
+      </div>
+    </header>
+
+    {
+      isProject && (
+        <div class="panel">
+          <div class="pcard" style="border:0;padding:0">
+            <div class="ph">
+              <span class:list={['status', entry.data.status ?? 'plan']}>{STATUS[entry.data.status ?? 'plan']}</span>
+              {entry.data.repo && (
+                <a class="chip" href={entry.data.repo}>
+                  リポジトリ
+                </a>
+              )}
+            </div>
+            <div class="prog" role="img" aria-label={`進捗${entry.data.progress ?? 0}%`}>
+              <i style={`width:${entry.data.progress ?? 0}%`} />
+            </div>
+            <div class="m num">
+              <span>進捗 {entry.data.progress ?? 0}%</span>
+              <span>このプロジェクトの学習時間 {formatMinutes(relatedMinutes)}</span>
+            </div>
+            <div class="chips">{entry.data.stack.map((s) => <span class="chip">{s}</span>)}</div>
+          </div>
+        </div>
+      )
+    }
+
+    <div class="prose"><Content /></div>
+    <TagList tags={entry.data.tags} />
+
+    {
+      related.length > 0 && (
+        <div>
+          <h2 class="section-title">関連するまなびログ</h2>
+          <ul class="til">
+            {related.map((e) => (
+              <li>
+                <span class="min num">
+                  {e.data.minutes}
+                  <small>分</small>
+                </span>
+                <div>
+                  <a class="t" href={url(`/learn/#${e.id}`)}>
+                    {e.data.title}
+                  </a>
+                  <div class="d num">{dotted(ymd(e.data.date))}</div>
+                </div>
+                <span class="chip">{e.data.category}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )
+    }
+  </article>
+</BaseLayout>

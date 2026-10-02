@@ -1,0 +1,528 @@
+<title>きもちとコード 画面設計</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: アプリ型。左サイドナビ＋メイン。ホーム＝気分カレンダー、3つのノート（きもち／テック／まなび）をタブで切替 */
+:root{
+  --bg:#F6F4FB; --surface:#FFFFFF; --fg:#221D33; --muted:#6B6580; --line:#E5E0EF; --chip:#EFEBF8;
+  --accent:#6C4DF5; --on-accent:#FFFFFF;
+  --feel:#FF7A6B; --tech:#16B88A; --learn:#F5A400;
+  --feel-soft:#FFE9E5; --tech-soft:#DDF6EE; --learn-soft:#FFF1CF;
+  --m-great:#FFC93C; --m-happy:#FF8A7A; --m-calm:#4FD9AC; --m-meh:#B79BFA; --m-down:#68AEF5;
+  --face:#2A2340; --cheek:#FF5E8A;
+  --code-bg:#1E1A2B; --code-fg:#E9E4F7;
+  --f-display:"Dela Gothic One","Hiragino Sans","Noto Sans JP",system-ui,sans-serif;
+  --f-body:"Zen Kaku Gothic New","Hiragino Sans","Noto Sans JP",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --r-lg:22px; --r-md:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#14111D; --surface:#1F1B2B; --fg:#F1EEF8; --muted:#A49EB9; --line:#322C45; --chip:#2A2539;
+  --accent:#9B85FF; --on-accent:#14111D;
+  --feel-soft:#3A2321; --tech-soft:#15332A; --learn-soft:#3A2E12;
+  --code-bg:#0E0C15; --code-fg:#E9E4F7; color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#14111D; --surface:#1F1B2B; --fg:#F1EEF8; --muted:#A49EB9; --line:#322C45; --chip:#2A2539;
+  --accent:#9B85FF; --on-accent:#14111D;
+  --feel-soft:#3A2321; --tech-soft:#15332A; --learn-soft:#3A2E12;
+  --code-bg:#0E0C15; --code-fg:#E9E4F7; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.7}
+h1,h2,h3{font-family:var(--f-display);font-weight:400;line-height:1.3;text-wrap:balance;margin:0}
+p{margin:0}
+.app{display:grid;grid-template-columns:230px minmax(0,1fr);min-height:100vh}
+/* ---------- nav ---------- */
+.side{position:sticky;top:env(safe-area-inset-top,0px);align-self:start;height:100vh;padding:28px 18px;display:flex;flex-direction:column;gap:22px;border-right:1px solid var(--line);background:var(--surface)}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--f-display);font-size:19px}
+.brand small{display:block;font-family:var(--f-body);font-size:11px;color:var(--muted);letter-spacing:.06em}
+.nav{display:flex;flex-direction:column;gap:6px}
+.nav a{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;color:var(--fg);text-decoration:none;font-weight:700;font-size:14px}
+.nav a .dot{width:12px;height:12px;border-radius:50%;background:var(--c,var(--muted));flex:none}
+.nav a:hover{background:var(--chip)}
+.nav a[aria-current="page"]{background:var(--fg);color:var(--bg)}
+.nav a:focus-visible,button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.side .write{margin-top:auto;border:0;border-radius:999px;padding:12px 16px;background:var(--accent);color:var(--on-accent);font:700 14px var(--f-body);cursor:pointer}
+.sample{font-size:11px;color:var(--muted)}
+main{padding-block:32px 64px;padding-inline:clamp(16px,4vw,48px);min-width:0;max-width:1180px}
+.view{display:flex;flex-direction:column;gap:28px}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:.12em;color:var(--muted)}
+.head{display:flex;flex-direction:column;gap:6px}
+.head h1{font-size:clamp(26px,4vw,38px)}
+.head p{color:var(--muted);max-width:62ch}
+.panel{background:var(--surface);border-radius:var(--r-lg);padding:22px;border:1px solid var(--line);min-width:0}
+.panel h2{font-size:18px;margin-bottom:14px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:20px}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:999px;background:var(--chip);font-size:12px;font-weight:500}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.num{font-variant-numeric:tabular-nums}
+/* ---------- mood blob ---------- */
+.blob{--s:56px;width:var(--s);height:var(--s);display:inline-grid;place-items:center;background:var(--c);flex:none;box-shadow:inset -4px -6px 0 rgba(0,0,0,.08)}
+.blob svg{width:78%;height:78%}
+.blob.great{border-radius:58% 42% 52% 48%/48% 56% 44% 52%}
+.blob.happy{border-radius:50% 50% 46% 54%/60% 52% 48% 40%}
+.blob.calm{border-radius:46% 54% 50% 50%/50% 46% 54% 50%}
+.blob.meh{border-radius:62% 38% 56% 44%/44% 58% 42% 56%}
+.blob.down{border-radius:50% 50% 50% 50%/42% 42% 58% 58%}
+@media (prefers-reduced-motion: no-preference){
+  .pick .blob{transition:transform .25s cubic-bezier(.3,1.6,.5,1)}
+  .pick button:hover .blob,.pick button[aria-pressed="true"] .blob{transform:translateY(-6px) rotate(-6deg) scale(1.08)}
+  .card:hover{transform:translateY(-3px)}
+  .card{transition:transform .2s}
+}
+/* ---------- home ---------- */
+.hero{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:20px}
+.today{background:var(--fg);color:var(--bg);border-radius:var(--r-lg);padding:26px;display:flex;flex-direction:column;gap:18px}
+.today h2{font-size:clamp(22px,3vw,30px)}
+.today .q{opacity:.75;font-size:14px}
+.pick{display:flex;flex-wrap:wrap;gap:12px}
+.pick button{background:none;border:0;padding:6px;border-radius:16px;display:flex;flex-direction:column;align-items:center;gap:6px;color:inherit;font:700 12px var(--f-body);cursor:pointer}
+.pick button[aria-pressed="true"]{background:rgba(255,255,255,.12)}
+.today .after{font-size:14px;min-height:1.7em}
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.stat{border-radius:var(--r-md);padding:16px;background:var(--surface);border:1px solid var(--line);display:flex;flex-direction:column;gap:2px}
+.stat b{font-family:var(--f-display);font-weight:400;font-size:28px}
+.stat span{font-size:12px;color:var(--muted)}
+.stat.feel{background:var(--feel-soft)} .stat.tech{background:var(--tech-soft)} .stat.learn{background:var(--learn-soft)}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
+.cal .wd{font-size:11px;color:var(--muted);text-align:center;font-weight:700}
+.day{aspect-ratio:1/1.15;max-width:100%;border-radius:12px;background:var(--chip);display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:5px 2px 6px;font-size:11px;min-width:0}
+.day .blob{--s:min(34px,70%)}
+.day .bar{width:60%;height:4px;border-radius:2px;background:var(--line);overflow:hidden}
+.day .bar i{display:block;height:100%;background:var(--learn)}
+.day.is-today{outline:2px solid var(--accent)}
+.day.empty{background:transparent}
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:14px;font-size:12px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend .blob{--s:18px}
+.feed{display:flex;flex-direction:column;gap:10px}
+.row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:14px;align-items:center;padding:12px;border-radius:var(--r-md);background:var(--bg)}
+.row .t{font-weight:700}
+.row .m{font-size:12px;color:var(--muted)}
+.kind{font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;color:var(--face)}
+.kind.feel{background:var(--feel)} .kind.tech{background:var(--tech)} .kind.learn{background:var(--learn)}
+.ico{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font:600 13px var(--f-mono);color:var(--face)}
+/* ---------- feel ---------- */
+.filters{display:flex;flex-wrap:wrap;gap:8px}
+.filters button{border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:999px;padding:6px 14px 6px 6px;display:flex;align-items:center;gap:8px;font:700 13px var(--f-body);cursor:pointer}
+.filters button .blob{--s:24px}
+.filters button[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.feelgrid{columns:3 260px;column-gap:18px}
+.card{break-inside:avoid;margin-bottom:18px;border-radius:var(--r-lg);overflow:hidden;background:var(--surface);border:1px solid var(--line)}
+.card .top{background:var(--c);padding:22px 20px 18px;display:flex;align-items:flex-end;justify-content:space-between;gap:10px;color:var(--face)}
+.card .top .blob{--s:76px;background:rgba(255,255,255,.55)}
+.card .date{font-family:var(--f-display);font-size:30px;line-height:1}
+.card .date small{display:block;font-family:var(--f-body);font-size:12px;font-weight:700;margin-top:6px}
+.card .body{padding:16px 20px 20px;display:flex;flex-direction:column;gap:8px}
+.card h3{font-size:17px}
+.card p{color:var(--muted);font-size:14px}
+/* ---------- tech ---------- */
+.subtabs{display:flex;gap:6px;background:var(--chip);padding:5px;border-radius:999px;width:max-content;max-width:100%}
+.subtabs button{border:0;background:none;color:var(--fg);padding:8px 16px;border-radius:999px;font:700 13px var(--f-body);cursor:pointer}
+.subtabs button[aria-pressed="true"]{background:var(--surface);box-shadow:0 1px 4px rgba(0,0,0,.12)}
+.proj{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:18px}
+.pcard{border-radius:var(--r-lg);background:var(--surface);border:1px solid var(--line);padding:20px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.pcard .ph{display:flex;align-items:center;gap:12px}
+.pcard .ph .ico{background:var(--tech)}
+.pcard h3{font-size:17px}
+.status{font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;border:1.5px solid currentColor}
+.status.run{color:var(--tech)} .status.plan{color:var(--muted)} .status.done{color:var(--accent)}
+.prog{height:8px;border-radius:4px;background:var(--chip);overflow:hidden}
+.prog i{display:block;height:100%;background:var(--tech)}
+.pcard .m{font-size:12px;color:var(--muted);display:flex;justify-content:space-between}
+.adr{display:flex;flex-direction:column;gap:14px}
+.adr article{display:grid;grid-template-columns:auto minmax(0,1fr);gap:16px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:20px}
+.adr .no{font:600 12px var(--f-mono);background:var(--tech-soft);color:var(--fg);border-radius:10px;padding:6px 10px;height:max-content}
+.adr h3{font-size:17px;margin-bottom:6px}
+.adr dl{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 12px;margin:8px 0 0;font-size:14px}
+.adr dt{font-weight:700;color:var(--muted)}
+.adr dd{margin:0}
+/* ---------- learn ---------- */
+.chart{display:grid;grid-template-columns:36px minmax(0,1fr);gap:8px}
+.yax{position:relative;height:200px;font-size:11px;color:var(--muted)}
+.yax span{position:absolute;right:0;transform:translateY(50%)}
+.plot{position:relative;height:200px;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px;align-items:end;border-bottom:1px solid var(--line)}
+.plot .gl{position:absolute;left:0;right:0;border-top:1px dashed var(--line)}
+.col{position:relative;display:flex;flex-direction:column-reverse;height:100%;justify-content:flex-start}
+.col i{display:block;width:100%;max-width:38px;margin-inline:auto}
+.col i:last-child{border-radius:8px 8px 0 0}
+.col .v{position:absolute;left:0;right:0;text-align:center;font-size:11px;font-weight:700}
+.xax{grid-column:2;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px;font-size:12px;text-align:center;color:var(--muted)}
+.xax .on{color:var(--fg);font-weight:700}
+.cats{display:flex;flex-direction:column;gap:12px}
+.cat{display:grid;grid-template-columns:110px minmax(0,1fr) 64px;gap:10px;align-items:center;font-size:13px}
+.cat .track{height:12px;border-radius:6px;background:var(--chip);overflow:hidden}
+.cat .track i{display:block;height:100%}
+.cat b{text-align:right}
+.til{display:flex;flex-direction:column;gap:10px}
+.til li{list-style:none;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:14px;align-items:start;padding:14px 16px;border-radius:var(--r-md);background:var(--surface);border:1px solid var(--line)}
+.til ul{padding:0;margin:0}
+.til .min{font-family:var(--f-display);font-size:20px;line-height:1}
+.til .min small{font-family:var(--f-body);font-size:11px;color:var(--muted)}
+.til .t{font-weight:700}
+.til .d{font-size:13px;color:var(--muted)}
+.swatch{width:12px;height:12px;border-radius:4px;display:inline-block}
+/* ---------- spec ---------- */
+.spec p{max-width:65ch}
+pre{background:var(--code-bg);color:var(--code-fg);border-radius:var(--r-md);padding:16px 18px;overflow-x:auto;font:13px/1.6 var(--f-mono);margin:0}
+.flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:14px}
+.flow div{border-radius:var(--r-md);padding:16px;display:flex;flex-direction:column;gap:6px}
+.flow h3{font-size:16px}
+.flow p{font-size:13px}
+.flow .f1{background:var(--feel-soft)} .flow .f2{background:var(--tech-soft)} .flow .f3{background:var(--learn-soft)}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--muted);font-weight:700}
+.tw{overflow-x:auto}
+/* ---------- responsive ---------- */
+@media (max-width:860px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  .side{position:sticky;height:auto;flex-direction:row;align-items:center;padding:10px 16px;gap:12px;border-right:0;border-bottom:1px solid var(--line);z-index:5;overflow-x:auto}
+  .brand small,.side .write,.side .sample{display:none}
+  .brand{font-size:15px;flex:none}
+  .brand .blob{--s:30px}
+  .nav{flex-direction:row;gap:4px}
+  .nav a{white-space:nowrap;padding:8px 12px;font-size:13px}
+  .hero{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:480px){
+  .cal{gap:4px}
+  .day{font-size:10px;border-radius:8px}
+  .cat{grid-template-columns:80px minmax(0,1fr) 56px}
+  .row{grid-template-columns:auto minmax(0,1fr)}
+  .row .kind{grid-column:2;justify-self:start}
+}
+</style>
+
+<div class="app">
+  <aside class="side">
+    <div class="brand"><span class="blob happy" style="--c:var(--m-happy);--s:38px" data-face="happy"></span><div>きもちとコード<small>ENGINEER DIARY</small></div></div>
+    <nav class="nav" aria-label="メイン">
+      <a href="#home" data-v="home" style="--c:var(--fg)"><span class="dot"></span>ホーム</a>
+      <a href="#feel" data-v="feel" style="--c:var(--feel)"><span class="dot"></span>きもち日記</a>
+      <a href="#tech" data-v="tech" style="--c:var(--tech)"><span class="dot"></span>テックノート</a>
+      <a href="#learn" data-v="learn" style="--c:var(--learn)"><span class="dot"></span>まなびログ</a>
+      <a href="#spec" data-v="spec" style="--c:var(--accent)"><span class="dot"></span>設計メモ</a>
+    </nav>
+    <button class="write" type="button" id="write-btn">＋ 今日を書く</button>
+    <p class="sample">表示中の記事・数値はすべてサンプルです</p>
+  </aside>
+
+  <main>
+    <!-- HOME -->
+    <section class="view" id="v-home">
+      <div class="hero">
+        <div class="today">
+          <span class="eyebrow" style="color:inherit;opacity:.7">2026.10.02 FRI</span>
+          <h2>きょうの気分は？</h2>
+          <p class="q">アイコンをタップすると、その日のカードの色とカレンダーに反映されます。</p>
+          <div class="pick" id="pick"></div>
+          <p class="after" id="after"></p>
+        </div>
+        <div class="stats">
+          <div class="stat learn"><b class="num">142h</b><span>累計スタディタイム</span></div>
+          <div class="stat learn"><b class="num">18日</b><span>連続学習ストリーク</span></div>
+          <div class="stat feel"><b class="num">64</b><span>きもち日記</span></div>
+          <div class="stat tech"><b class="num">3</b><span>進行中のプロジェクト</span></div>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="panel">
+          <h2>きもちカレンダー</h2>
+          <div class="cal" id="cal"></div>
+          <div class="legend" id="legend"></div>
+        </div>
+        <div class="panel">
+          <h2>最近の記録</h2>
+          <div class="feed" id="feed"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FEEL -->
+    <section class="view" id="v-feel" hidden>
+      <div class="head">
+        <span class="eyebrow" style="color:var(--feel)">FEEL ／ きもち日記</span>
+        <h1>その日の気分が、カードの色になる</h1>
+        <p>技術の話は書かない場所です。うれしかったこと、しんどかったことを気分アイコンと一緒に残します。気分で絞り込むと、自分の波が見えてきます。</p>
+      </div>
+      <div class="filters" id="filters"></div>
+      <div class="feelgrid" id="feelgrid"></div>
+    </section>
+
+    <!-- TECH -->
+    <section class="view" id="v-tech" hidden>
+      <div class="head">
+        <span class="eyebrow" style="color:var(--tech)">BUILD ／ テックノート</span>
+        <h1>考えたこと、つくっているもの</h1>
+        <p>技術的な判断の理由（なぜそれを選んだか）と、個人プロジェクトの進捗をまとめる場所です。日々の学習メモはまなびログに分けます。</p>
+      </div>
+      <div class="subtabs" role="group" aria-label="表示切替">
+        <button type="button" aria-pressed="true" data-sub="proj">プロジェクト</button>
+        <button type="button" aria-pressed="false" data-sub="adr">考え方メモ</button>
+      </div>
+      <div class="proj" id="proj"></div>
+      <div class="adr" id="adr" hidden></div>
+    </section>
+
+    <!-- LEARN -->
+    <section class="view" id="v-learn" hidden>
+      <div class="head">
+        <span class="eyebrow" style="color:var(--learn)">LEARN ／ まなびログ</span>
+        <h1>今週のスタディタイム <span class="num" id="wk-total"></span></h1>
+        <p>学んだことを1件ずつ、かかった時間と一緒に記録します。時間はカテゴリ別に集計され、グラフとホームのカレンダーに反映されます。</p>
+      </div>
+      <div class="grid2">
+        <div class="panel">
+          <h2>日別（分）</h2>
+          <div class="chart" id="chart"></div>
+        </div>
+        <div class="panel">
+          <h2>カテゴリ別・今月</h2>
+          <div class="cats" id="cats"></div>
+        </div>
+      </div>
+      <div class="til"><h2 style="font-size:18px;margin-bottom:12px">学んだこと（TIL）</h2><ul id="til"></ul></div>
+    </section>
+
+    <!-- SPEC -->
+    <section class="view spec" id="v-spec" hidden>
+      <div class="head">
+        <span class="eyebrow" style="color:var(--accent)">SPEC ／ 設計メモ</span>
+        <h1>3つのノートを分けて、ホームで重ねる</h1>
+        <p>書く場所は気持ち・技術・学習の3つに分けます。ホームのカレンダーで、気分（アイコン）と学習時間（下のバー）を同じ日付に重ねて見せます。</p>
+      </div>
+      <div class="flow">
+        <div class="f1"><h3>きもち日記</h3><p>1日1件。気分5段階＋自由文＋写真。気分がカードの色とアイコンを決める。</p></div>
+        <div class="f2"><h3>テックノート</h3><p>プロジェクト（進捗・ステータス・技術スタック）と考え方メモ（ADR形式：背景／決定／理由）。</p></div>
+        <div class="f3"><h3>まなびログ</h3><p>1日に何件でも。学習時間（分）とカテゴリを必須にして、自動で集計する。</p></div>
+      </div>
+      <div class="panel">
+        <h2>ページ構成</h2>
+<pre>/                    ホーム：気分ピッカー・きもちカレンダー・統計・最近の記録
+/feel/               きもち日記一覧（気分フィルター・Masonryカード）
+/feel/2026-10-02     個別ページ（大きな気分アイコン＋本文＋写真）
+/tech/               テックノート（プロジェクト／考え方メモのタブ）
+/tech/projects/[slug]  プロジェクト詳細（進捗・関連する学習ログ）
+/tech/notes/[slug]   考え方メモ（ADR）
+/learn/              まなびログ（週グラフ・カテゴリ集計・TIL一覧）
+/tags/[tag]          タグ別（3種類の記事を横断）
+/about               自己紹介・スキル</pre>
+      </div>
+      <div class="panel">
+        <h2>データ設計（Astro Content Collections）</h2>
+<pre>// src/content.config.ts
+const feel = defineCollection({
+  loader: glob({ pattern: "**/*.md", base: "./src/content/feel" }),
+  schema: z.object({
+    date:    z.coerce.date(),
+    mood:    z.enum(["great", "happy", "calm", "meh", "down"]),
+    title:   z.string(),
+    weather: z.string().optional(),
+    photo:   z.string().optional(),
+  }),
+});
+
+const tech = defineCollection({
+  schema: z.object({
+    type:     z.enum(["project", "note"]),
+    title:    z.string(),
+    status:   z.enum(["plan", "run", "done"]).optional(),
+    progress: z.number().min(0).max(100).optional(),
+    stack:    z.array(z.string()).default([]),
+    repo:     z.string().url().optional(),
+  }),
+});
+
+const learn = defineCollection({
+  schema: z.object({
+    date:     z.coerce.date(),
+    minutes:  z.number(),                 // スタディタイム
+    category: z.enum(["TypeScript", "AWS", "アルゴリズム", "設計"]),
+    project:  z.string().optional(),      // tech の slug と紐づけ
+    tags:     z.array(z.string()).default([]),
+    source:   z.string().url().optional(),
+  }),
+});</pre>
+      </div>
+      <div class="panel">
+        <h2>画面と実装の対応</h2>
+        <div class="tw"><table>
+          <thead><tr><th>画面要素</th><th>データ</th><th>実装</th></tr></thead>
+          <tbody>
+            <tr><td>気分アイコン</td><td>feel.mood</td><td>SVGコンポーネント <code>MoodBlob.astro</code>（5種類の表情と色）</td></tr>
+            <tr><td>きもちカレンダー</td><td>feel.mood ＋ learn.minutes の日別合計</td><td>ビルド時に日付で集計し、静的に出力</td></tr>
+            <tr><td>週グラフ・カテゴリ集計</td><td>learn.minutes, learn.category</td><td>ビルド時に集計（ライブラリ不要。CSSのバーで描画）</td></tr>
+            <tr><td>気分フィルター・サブタブ</td><td>—</td><td>小さなクライアントスクリプト（Astro Islands）</td></tr>
+            <tr><td>プロジェクト進捗</td><td>tech.progress, learn.project</td><td>関連する学習ログの合計時間も詳細ページに表示</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+const MOODS = {
+  great:{label:"最高",c:"var(--m-great)"},
+  happy:{label:"うれしい",c:"var(--m-happy)"},
+  calm:{label:"おだやか",c:"var(--m-calm)"},
+  meh:{label:"もやもや",c:"var(--m-meh)"},
+  down:{label:"しょんぼり",c:"var(--m-down)"},
+};
+const FACES = {
+  great:'<circle cx="21" cy="25" r="3.2"/><circle cx="39" cy="25" r="3.2"/><path d="M19 33 Q30 47 41 33 Z"/><ellipse cx="14" cy="34" rx="4" ry="2.6" fill="var(--cheek)" opacity=".55"/><ellipse cx="46" cy="34" rx="4" ry="2.6" fill="var(--cheek)" opacity=".55"/>',
+  happy:'<circle cx="22" cy="26" r="3"/><circle cx="38" cy="26" r="3"/><path d="M21 35 Q30 43 39 35" fill="none" stroke="var(--face)" stroke-width="3" stroke-linecap="round"/><ellipse cx="15" cy="34" rx="3.6" ry="2.4" fill="var(--cheek)" opacity=".5"/><ellipse cx="45" cy="34" rx="3.6" ry="2.4" fill="var(--cheek)" opacity=".5"/>',
+  calm:'<path d="M17 27 Q21.5 22 26 27 M34 27 Q38.5 22 43 27 M24 37 Q30 41 36 37" fill="none" stroke="var(--face)" stroke-width="3" stroke-linecap="round"/>',
+  meh:'<circle cx="22" cy="27" r="3"/><circle cx="38" cy="27" r="3"/><path d="M20 39 Q25 35 30 39 T40 39" fill="none" stroke="var(--face)" stroke-width="3" stroke-linecap="round"/>',
+  down:'<circle cx="22" cy="28" r="3"/><circle cx="38" cy="28" r="3"/><path d="M22 41 Q30 34 38 41" fill="none" stroke="var(--face)" stroke-width="3" stroke-linecap="round"/><path d="M41 31 q2 5 0 7 q-2 -2 0 -7z" fill="var(--m-down)" stroke="var(--face)" stroke-width="1.2"/>',
+};
+const blob = (m, s) => `<span class="blob ${m}" style="--c:${MOODS[m].c}${s?`;--s:${s}`:""}" role="img" aria-label="${MOODS[m].label}"><svg viewBox="0 0 60 60" fill="var(--face)" aria-hidden="true">${FACES[m]}</svg></span>`;
+document.querySelectorAll("[data-face]").forEach(el => { el.innerHTML = `<svg viewBox="0 0 60 60" fill="var(--face)" aria-hidden="true">${FACES[el.dataset.face]}</svg>`; });
+
+const store = {
+  get(k){ try { return localStorage.getItem(k); } catch { return null; } },
+  set(k,v){ try { localStorage.setItem(k,v); } catch {} },
+};
+
+/* ---- sample data ---- */
+const FEEL = [
+  {d:"2026-10-01",m:"great",t:"初めてPRがマージされた",b:"OSSのドキュメント修正だけど、メンテナーから「Thanks!」と返ってきた。帰りにちょっといいコーヒーを買った。"},
+  {d:"2026-09-30",m:"meh",t:"集中できない日",b:"Slackの通知に振り回されて何も進まなかった気がする。明日は午前中だけ通知を切ってみる。"},
+  {d:"2026-09-28",m:"calm",t:"日曜の散歩",b:"川沿いを1時間歩いた。頭の中でずっと設計のことを考えていたけど、それも悪くない。"},
+  {d:"2026-09-26",m:"happy",t:"勉強会でLTした",b:"5分のLTで緊張したけど、終わった後に質問を2つもらえた。資料を作ったことで自分の理解も深まった。"},
+  {d:"2026-09-24",m:"down",t:"本番障害の振り返り",b:"自分のマイグレーションが原因だった。落ち込んだけど、チームが責めずに仕組みの話をしてくれたのが救いだった。"},
+  {d:"2026-09-22",m:"happy",t:"新しいキーボード",b:"分割キーボードに替えた。まだ打ち間違いが多いけど、肩が楽になった気がする。"},
+  {d:"2026-09-20",m:"calm",t:"何もしない土曜",b:"PCを開かないと決めて、本を読んで昼寝した。たまにはこういう日も必要。"},
+];
+const PROJ = [
+  {ico:"KC",t:"きもちとコード（このサイト）",s:"run",p:72,st:["Astro","TypeScript","Cloudflare Pages"],h:38,u:"10/01"},
+  {ico:"SR",t:"株レポート自動生成ツール",s:"run",p:55,st:["Python","Notion API","Figma"],h:24,u:"09/29"},
+  {ico:"TL",t:"家計簿CLI",s:"done",p:100,st:["Go","SQLite"],h:31,u:"08/18"},
+  {ico:"RT",t:"読書記録アプリ",s:"plan",p:5,st:["Next.js","Supabase"],h:2,u:"09/21"},
+];
+const ADR = [
+  {n:"ADR-004",t:"ブログをCMSではなくMarkdown＋Gitで管理する",ctx:"Notionで書くと楽だが、API制限や画像URLの期限切れがある。",dec:"記事はリポジトリ内のMarkdownで管理し、pushで自動デプロイする。",why:"書いた内容が自分の手元に残り、差分で成長が追えるため。"},
+  {n:"ADR-003",t:"状態管理ライブラリを入れない",ctx:"読書記録アプリで画面が増えてきた。",dec:"まずはReactの標準機能とURLの状態だけで組む。",why:"必要になる前に抽象化すると、学習コストのほうが大きくなるため。"},
+  {n:"ADR-002",t:"テストは「壊れたら困る計算」から書く",ctx:"家計簿CLIでテストを書く時間が取れない。",dec:"集計と日付処理のロジックだけはユニットテスト必須にする。",why:"UIは目で見てわかるが、計算ミスは気づきにくいため。"},
+];
+const CAT = {"TypeScript":"#3B82F6","AWS":"#F59E0B","アルゴリズム":"#EC4899","設計":"#10B981"};
+const WEEK = [
+  {d:"9/26 土",v:{"TypeScript":60,"設計":30}},
+  {d:"9/27 日",v:{"アルゴリズム":45}},
+  {d:"9/28 月",v:{"AWS":40,"TypeScript":20}},
+  {d:"9/29 火",v:{"TypeScript":90,"設計":45}},
+  {d:"9/30 水",v:{"AWS":30}},
+  {d:"10/1 木",v:{"アルゴリズム":60,"TypeScript":40,"設計":30}},
+  {d:"10/2 金",v:{"AWS":50,"TypeScript":25}},
+];
+const TIL = [
+  {m:50,c:"AWS",t:"IAMロールの信頼ポリシーと権限ポリシーの違い",d:"「誰が引き受けられるか」と「引き受けた後に何ができるか」は別のポリシー。",tags:["IAM"]},
+  {m:25,c:"TypeScript",t:"satisfies 演算子の使いどころ",d:"型を広げずに、オブジェクトが型を満たしているかだけをチェックできる。",tags:["型"]},
+  {m:60,c:"アルゴリズム",t:"二分探索の境界条件を整理した",d:"lower_bound と upper_bound を半開区間で考えると off-by-one が減る。",tags:["AtCoder"]},
+  {m:40,c:"TypeScript",t:"Astro Content Collections のスキーマ定義",d:"Zod で frontmatter を型付けすると、書き間違いをビルド時に検出できる。",tags:["Astro","きもちとコード"]},
+  {m:30,c:"設計",t:"ADR（Architecture Decision Record）の書き方",d:"背景・決定・理由の3点だけ書く。完璧を目指さず、決めたときに残す。",tags:["ドキュメント"]},
+];
+
+/* ---- home ---- */
+const pick = document.getElementById("pick"), after = document.getElementById("after");
+const MSG = {great:"いい日ですね。何がよかったか一言残しておきましょう。",happy:"うれしいことがあった日。きもち日記に書いておきましょう。",calm:"おだやかな日。こういう日の記録も大事です。",meh:"もやもやした日。理由を書き出すと少し整理できます。",down:"しんどい日。今日は短く書くだけで十分です。"};
+let today = store.get("kc-today") || null;
+function renderPick(){
+  pick.innerHTML = Object.keys(MOODS).map(m => `<button type="button" data-m="${m}" aria-pressed="${m===today}">${blob(m,"52px")}${MOODS[m].label}</button>`).join("");
+  after.textContent = today ? MSG[today] : "";
+}
+pick.addEventListener("click", e => {
+  const b = e.target.closest("button"); if(!b) return;
+  today = b.dataset.m; store.set("kc-today", today); renderPick(); renderCal();
+});
+
+const calMoods = ["calm","happy","calm","meh","happy","great","calm","down","calm","happy","happy","meh","calm","great","calm","happy","meh","calm","calm","happy","down","calm","happy","calm","great","happy","calm","meh","calm","great"];
+const calMin = [40,0,90,30,60,120,45,20,75,60,0,30,90,135,45,60,20,80,30,60,75,45,90,45,60,135,40,30,130,75];
+function renderCal(){
+  const end = new Date(2026,9,2), start = new Date(2026,8,3);
+  const cells = ["日","月","火","水","木","金","土"].map(w=>`<div class="wd">${w}</div>`);
+  for(let i=0;i<start.getDay();i++) cells.push('<div class="day empty"></div>');
+  let i=0;
+  for(let dt=new Date(start); dt<=end; dt.setDate(dt.getDate()+1), i++){
+    const isToday = dt.getTime()===end.getTime();
+    const m = isToday ? today : calMoods[i % calMoods.length];
+    const min = isToday ? 75 : calMin[i % calMin.length];
+    cells.push(`<div class="day${isToday?" is-today":""}" title="${dt.getMonth()+1}/${dt.getDate()} 学習${min}分"><span class="num">${dt.getDate()}</span>${m?blob(m):'<span class="blob" style="--c:var(--line)"></span>'}<span class="bar"><i style="width:${Math.min(100,min/150*100)}%"></i></span></div>`);
+  }
+  document.getElementById("cal").innerHTML = cells.join("");
+}
+document.getElementById("legend").innerHTML = Object.keys(MOODS).map(m=>`<span>${blob(m)}${MOODS[m].label}</span>`).join("") + '<span><span class="bar" style="display:inline-block;width:22px;height:4px;border-radius:2px;background:var(--learn)"></span>学習時間</span>';
+
+const feed = [
+  {k:"feel",ico:blob("great","44px"),t:FEEL[0].t,m:"10/01 ・ きもち日記"},
+  {k:"learn",ico:'<span class="ico" style="background:var(--learn)">50m</span>',t:TIL[0].t,m:"10/02 ・ AWS"},
+  {k:"tech",ico:'<span class="ico" style="background:var(--tech)">KC</span>',t:"きもちとコード：カレンダー表示を実装",m:"10/01 ・ 進捗 72%"},
+  {k:"learn",ico:'<span class="ico" style="background:var(--learn)">60m</span>',t:TIL[2].t,m:"10/01 ・ アルゴリズム"},
+  {k:"feel",ico:blob("meh","44px"),t:FEEL[1].t,m:"09/30 ・ きもち日記"},
+];
+const KL = {feel:"きもち",tech:"テック",learn:"まなび"};
+document.getElementById("feed").innerHTML = feed.map(f=>`<div class="row">${f.ico}<div><div class="t">${f.t}</div><div class="m">${f.m}</div></div><span class="kind ${f.k}">${KL[f.k]}</span></div>`).join("");
+
+/* ---- feel ---- */
+let feelFilter = null;
+function renderFeel(){
+  document.getElementById("filters").innerHTML = `<button type="button" data-f="" aria-pressed="${!feelFilter}" style="padding-left:14px">すべて</button>` + Object.keys(MOODS).map(m=>`<button type="button" data-f="${m}" aria-pressed="${feelFilter===m}">${blob(m)}${MOODS[m].label}</button>`).join("");
+  const list = FEEL.filter(f=>!feelFilter||f.m===feelFilter);
+  const W = ["日","月","火","水","木","金","土"];
+  document.getElementById("feelgrid").innerHTML = list.length ? list.map(f=>{
+    const dt = new Date(f.d+"T00:00");
+    return `<article class="card"><div class="top" style="--c:${MOODS[f.m].c}"><div class="date num">${dt.getMonth()+1}/${dt.getDate()}<small>${W[dt.getDay()]}曜日 ・ ${MOODS[f.m].label}</small></div>${blob(f.m)}</div><div class="body"><h3>${f.t}</h3><p>${f.b}</p></div></article>`;
+  }).join("") : '<p style="color:var(--muted)">この気分の日記はまだありません。</p>';
+}
+document.getElementById("filters").addEventListener("click", e=>{
+  const b = e.target.closest("button"); if(!b) return;
+  feelFilter = b.dataset.f || null; renderFeel();
+});
+
+/* ---- tech ---- */
+const SL = {run:"進行中",plan:"計画中",done:"完了"};
+document.getElementById("proj").innerHTML = PROJ.map(p=>`<article class="pcard"><div class="ph"><span class="ico">${p.ico}</span><div style="min-width:0"><h3>${p.t}</h3><span class="status ${p.s}">${SL[p.s]}</span></div></div><div class="prog" role="img" aria-label="進捗${p.p}%"><i style="width:${p.p}%"></i></div><div class="m num"><span>進捗 ${p.p}%</span><span>学習 ${p.h}h ・ 更新 ${p.u}</span></div><div class="chips">${p.st.map(s=>`<span class="chip">${s}</span>`).join("")}</div></article>`).join("");
+document.getElementById("adr").innerHTML = ADR.map(a=>`<article><span class="no">${a.n}</span><div><h3>${a.t}</h3><dl><dt>背景</dt><dd>${a.ctx}</dd><dt>決定</dt><dd>${a.dec}</dd><dt>理由</dt><dd>${a.why}</dd></dl></div></article>`).join("");
+document.querySelector(".subtabs").addEventListener("click", e=>{
+  const b = e.target.closest("button"); if(!b) return;
+  document.querySelectorAll(".subtabs button").forEach(x=>x.setAttribute("aria-pressed", x===b));
+  document.getElementById("proj").hidden = b.dataset.sub!=="proj";
+  document.getElementById("adr").hidden = b.dataset.sub!=="adr";
+});
+
+/* ---- learn ---- */
+(function(){
+  const MAX = 180, total = WEEK.reduce((s,d)=>s+Object.values(d.v).reduce((a,b)=>a+b,0),0);
+  document.getElementById("wk-total").textContent = `${Math.floor(total/60)}時間${total%60}分`;
+  const ticks = [0,60,120,180];
+  const y = `<div class="yax">${ticks.map(t=>`<span style="bottom:${t/MAX*100}%">${t}</span>`).join("")}</div>`;
+  const grid = ticks.slice(1).map(t=>`<div class="gl" style="bottom:${t/MAX*100}%"></div>`).join("");
+  const cols = WEEK.map((d,i)=>{
+    const sum = Object.values(d.v).reduce((a,b)=>a+b,0);
+    const segs = Object.entries(d.v).map(([c,v])=>`<i style="height:${v/MAX*100}%;background:${CAT[c]}" title="${c} ${v}分"></i>`).join("");
+    return `<div class="col">${segs}<span class="v num" style="bottom:calc(${sum/MAX*100}% + 2px)${i===6?";color:var(--accent)":""}">${sum}</span></div>`;
+  }).join("");
+  const x = `<div class="xax">${WEEK.map((d,i)=>`<span class="${i===6?"on":""}">${d.d.split(" ")[1]}<br><small>${d.d.split(" ")[0]}</small></span>`).join("")}</div>`;
+  document.getElementById("chart").innerHTML = y + `<div class="plot">${grid}${cols}</div>` + x;
+  const month = {"TypeScript":1260,"AWS":720,"アルゴリズム":540,"設計":390};
+  const mm = Math.max(...Object.values(month));
+  document.getElementById("cats").innerHTML = Object.entries(month).map(([c,v])=>`<div class="cat"><span><span class="swatch" style="background:${CAT[c]}"></span> ${c}</span><span class="track"><i style="width:${v/mm*100}%;background:${CAT[c]}"></i></span><b class="num">${Math.floor(v/60)}h${v%60?String(v%60).padStart(2,"0"):""}</b></div>`).join("");
+  document.getElementById("til").innerHTML = TIL.map(t=>`<li><span class="min num">${t.m}<small>分</small></span><div style="min-width:0"><div class="t">${t.t}</div><div class="d">${t.d}</div><div class="chips" style="margin-top:6px">${t.tags.map(g=>`<span class="chip">#${g}</span>`).join("")}</div></div><span class="chip"><span class="swatch" style="background:${CAT[t.c]}"></span>${t.c}</span></li>`).join("");
+})();
+
+/* ---- routing ---- */
+const VIEWS = ["home","feel","tech","learn","spec"];
+function go(){
+  const v = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : "home";
+  VIEWS.forEach(n=>document.getElementById("v-"+n).hidden = n!==v);
+  document.querySelectorAll(".nav a").forEach(a=>{ if(a.dataset.v===v) a.setAttribute("aria-current","page"); else a.removeAttribute("aria-current"); });
+  window.scrollTo(0,0);
+}
+window.addEventListener("hashchange", go);
+document.getElementById("write-btn").addEventListener("click", ()=>{ location.hash = "home"; pick.querySelector("button")?.focus(); });
+renderPick(); renderCal(); renderFeel(); go();
+</script>

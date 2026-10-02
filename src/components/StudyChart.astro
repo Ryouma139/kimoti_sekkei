@@ -1,0 +1,51 @@
+---
+import { CATEGORIES, type Category } from '../lib/categories';
+import { monthDay, weekday } from '../lib/dates';
+
+interface Props {
+  days: { date: string; values: Record<string, number> }[];
+  /** 強調する日（今日） */
+  highlight?: string;
+}
+
+const { days, highlight } = Astro.props;
+const sums = days.map((d) => Object.values(d.values).reduce((a, b) => a + b, 0));
+const step = Math.max(...sums, 60) > 240 ? 120 : 60;
+const max = Math.max(step, Math.ceil(Math.max(...sums, 1) / step) * step);
+const ticks = Array.from({ length: max / step + 1 }, (_, i) => i * step);
+const color = (c: string) => CATEGORIES[c as Category] ?? 'var(--muted)';
+---
+
+<div class="chart" style={`--cols:${days.length}`}>
+  <div class="yax" aria-hidden="true">
+    {ticks.map((t) => <span style={`bottom:${(t / max) * 100}%`}>{t}</span>)}
+  </div>
+  <div class="plot">
+    {ticks.slice(1).map((t) => <div class="gl" style={`bottom:${(t / max) * 100}%`} />)}
+    {
+      days.map((d, i) => (
+        <div class="col" title={`${monthDay(d.date)} ${sums[i]}分`}>
+          {Object.entries(d.values).map(([c, v]) => (
+            <i style={`height:${(v / max) * 100}%;background:${color(c)}`} title={`${c} ${v}分`} />
+          ))}
+          {sums[i] > 0 && (
+            <span class:list={['v', 'num', { on: d.date === highlight }]} style={`bottom:calc(${(sums[i] / max) * 100}% + 2px)`}>
+              {sums[i]}
+            </span>
+          )}
+        </div>
+      ))
+    }
+  </div>
+  <div class="xax">
+    {
+      days.map((d) => (
+        <span class:list={{ on: d.date === highlight }}>
+          {weekday(d.date)}
+          <br />
+          <small>{monthDay(d.date)}</small>
+        </span>
+      ))
+    }
+  </div>
+</div>

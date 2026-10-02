@@ -1,0 +1,21 @@
+{
+  "name": "kimoti-sekkei",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro check && astro build",
+    "preview": "astro preview",
+    "new:feel": "node scripts/new.mjs feel",
+    "new:learn": "node scripts/new.mjs learn",
+    "new:tech": "node scripts/new.mjs tech"
+  },
+  "dependencies": {
+    "astro": "^5.14.0"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.4",
+    "typescript": "^5.9.0"
+  }
+}

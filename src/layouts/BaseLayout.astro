@@ -1,0 +1,66 @@
+---
+import '../styles/global.css';
+import MoodBlob from '../components/MoodBlob.astro';
+import { url } from '../lib/url';
+
+type Section = 'home' | 'feel' | 'tech' | 'learn' | 'about';
+
+interface Props {
+  title?: string;
+  description?: string;
+  current?: Section;
+}
+
+const SITE = 'きもちとコード';
+const { title, description = 'きもちと学びを記録する、エンジニアの日記。', current } = Astro.props;
+const pageTitle = title ? `${title} | ${SITE}` : SITE;
+
+const NAV: { key: Section; href: string; label: string; color: string }[] = [
+  { key: 'home', href: '/', label: 'ホーム', color: 'var(--fg)' },
+  { key: 'feel', href: '/feel/', label: 'きもち日記', color: 'var(--feel)' },
+  { key: 'tech', href: '/tech/', label: 'テックノート', color: 'var(--tech)' },
+  { key: 'learn', href: '/learn/', label: 'まなびログ', color: 'var(--learn)' },
+  { key: 'about', href: '/about/', label: 'このサイトについて', color: 'var(--accent)' },
+];
+---
+
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href={url('/favicon.svg')} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap"
+    />
+  </head>
+  <body>
+    <div class="app">
+      <aside class="side">
+        <a class="brand" href={url('/')}>
+          <MoodBlob mood="happy" size="38px" />
+          <div>{SITE}<small>ENGINEER DIARY</small></div>
+        </a>
+        <nav class="nav" aria-label="メイン">
+          {
+            NAV.map((n) => (
+              <a href={url(n.href)} style={`--c:${n.color}`} aria-current={n.key === current ? 'page' : undefined}>
+                <span class="dot" />
+                {n.label}
+              </a>
+            ))
+          }
+        </nav>
+        <p class="side-note">気分・技術・学びを分けて記録しています。</p>
+      </aside>
+      <main>
+        <slot />
+      </main>
+    </div>
+  </body>
+</html>

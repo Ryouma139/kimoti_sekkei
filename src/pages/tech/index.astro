@@ -1,0 +1,59 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ProjectCard from '../../components/ProjectCard.astro';
+import { getLearn, getTech, projectMinutes } from '../../lib/data';
+import { dotted, ymd } from '../../lib/dates';
+import { url } from '../../lib/url';
+
+const [tech, learn] = await Promise.all([getTech(), getLearn()]);
+const STATUS_ORDER = { run: 0, plan: 1, done: 2 } as const;
+const projects = tech
+  .filter((e) => e.data.type === 'project')
+  .sort((a, b) => STATUS_ORDER[a.data.status ?? 'plan'] - STATUS_ORDER[b.data.status ?? 'plan']);
+const notes = tech.filter((e) => e.data.type === 'note');
+---
+
+<BaseLayout title="テックノート" current="tech">
+  <section class="view">
+    <div class="head">
+      <span class="eyebrow" style="color:var(--tech)">BUILD ／ テックノート</span>
+      <h1>考えたこと、つくっているもの</h1>
+      <p>技術的な判断の理由と、個人プロジェクトの進捗をまとめる場所です。日々の学習メモはまなびログに書きます。</p>
+    </div>
+    <div class="subtabs" role="group" aria-label="表示切替">
+      <button type="button" data-tab="projects" aria-pressed="true">プロジェクト（{projects.length}）</button>
+      <button type="button" data-tab="notes" aria-pressed="false">考え方メモ（{notes.length}）</button>
+    </div>
+    <div class="proj" data-panel="projects">
+      {projects.map((entry) => <ProjectCard entry={entry} minutes={projectMinutes(learn, entry.id)} />)}
+      {projects.length === 0 && <p class="empty-note">プロジェクトはまだありません。</p>}
+    </div>
+    <div class="notes" data-panel="notes" hidden>
+      {
+        notes.map((entry, i) => (
+          <a class="note" href={url(`/tech/${entry.id}/`)}>
+            <span class="no num">#{String(notes.length - i).padStart(3, '0')}</span>
+            <div>
+              <h3>{entry.data.title}</h3>
+              {entry.data.summary && <p>{entry.data.summary}</p>}
+              <p class="num">{dotted(ymd(entry.data.date))}</p>
+            </div>
+          </a>
+        ))
+      }
+      {notes.length === 0 && <p class="empty-note">考え方メモはまだありません。</p>}
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  const tabs = document.querySelectorAll<HTMLButtonElement>('.subtabs button');
+  const panels = document.querySelectorAll<HTMLElement>('[data-panel]');
+
+  const show = (name: string) => {
+    tabs.forEach((t) => t.setAttribute('aria-pressed', String(t.dataset.tab === name)));
+    panels.forEach((p) => (p.hidden = p.dataset.panel !== name));
+  };
+  tabs.forEach((tab) => tab.addEventListener('click', () => show(tab.dataset.tab ?? 'projects')));
+  if (location.hash === '#notes') show('notes');
+</script>

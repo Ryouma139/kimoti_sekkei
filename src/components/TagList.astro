@@ -1,0 +1,21 @@
+---
+import { url } from '../lib/url';
+
+interface Props {
+  tags: string[];
+}
+
+const { tags } = Astro.props;
+---
+
+{
+  tags.length > 0 && (
+    <div class="chips">
+      {tags.map((t) => (
+        <a class="chip" href={url(`/tags/${encodeURIComponent(t)}/`)}>
+          #{t}
+        </a>
+      ))}
+    </div>
+  )
+}

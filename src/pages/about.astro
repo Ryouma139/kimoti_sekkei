@@ -1,0 +1,53 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import MoodBlob from '../components/MoodBlob.astro';
+import { MOODS, MOOD_KEYS } from '../lib/moods';
+---
+
+<BaseLayout title="このサイトについて" current="about">
+  <section class="view">
+    <div class="head">
+      <span class="eyebrow" style="color:var(--accent)">ABOUT</span>
+      <h1>きもちとコード</h1>
+      <p>エンジニアとしての学習を続けるための日記です。気持ち・技術・学びを分けて書き、ホームのカレンダーで重ねて振り返ります。</p>
+    </div>
+
+    <div class="grid2">
+      <div class="panel" style="background:var(--feel-soft);border:0">
+        <h2>きもち日記</h2>
+        <p>1日1件。その日の気分を5段階のアイコンで選び、出来事を書きます。技術の話は書きません。</p>
+      </div>
+      <div class="panel" style="background:var(--tech-soft);border:0">
+        <h2>テックノート</h2>
+        <p>個人プロジェクトの進捗と、技術的な判断の理由（考え方メモ）をまとめます。</p>
+      </div>
+      <div class="panel" style="background:var(--learn-soft);border:0">
+        <h2>まなびログ</h2>
+        <p>学んだことを1件ずつ、かかった時間（分）とカテゴリつきで記録します。</p>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>気分アイコン</h2>
+      <div class="legend" style="font-size:14px;color:var(--fg)">
+        {
+          MOOD_KEYS.map((m) => (
+            <span>
+              <MoodBlob mood={m} size="40px" />
+              {MOODS[m].label}
+            </span>
+          ))
+        }
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>プロフィール</h2>
+      <p>ここに自己紹介、学習中の技術、SNSやGitHubへのリンクを書きます。（src/pages/about.astro を編集してください）</p>
+    </div>
+
+    <p class="empty-note" style="font-size:13px">
+      このサイトは Astro で作っています。気分アイコンはこのサイトのために描いたSVGです。フォントは Google Fonts（Dela Gothic One、Zen Kaku Gothic New、JetBrains Mono / SIL Open Font License）を使っています。
+    </p>
+  </section>
+</BaseLayout>

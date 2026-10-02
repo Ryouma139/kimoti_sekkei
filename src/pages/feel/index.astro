@@ -1,0 +1,53 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import FeelCard from '../../components/FeelCard.astro';
+import MoodBlob from '../../components/MoodBlob.astro';
+import { getFeel } from '../../lib/data';
+import { MOODS, MOOD_KEYS } from '../../lib/moods';
+
+const feel = await getFeel();
+---
+
+<BaseLayout title="きもち日記" current="feel">
+  <section class="view">
+    <div class="head">
+      <span class="eyebrow" style="color:var(--feel)">FEEL ／ きもち日記</span>
+      <h1>その日の気分が、カードの色になる</h1>
+      <p>技術の話は書かない場所です。うれしかったこと、しんどかったことを気分アイコンと一緒に残します。</p>
+    </div>
+    <div class="filters" role="group" aria-label="気分で絞り込む">
+      <button type="button" class="all" data-filter="" aria-pressed="true">すべて</button>
+      {
+        MOOD_KEYS.map((m) => (
+          <button type="button" data-filter={m} aria-pressed="false">
+            <MoodBlob mood={m} />
+            {MOODS[m].label}
+          </button>
+        ))
+      }
+    </div>
+    <div class="feelgrid">
+      {feel.map((entry) => <FeelCard entry={entry} />)}
+    </div>
+    <p class="empty-note" id="feel-empty" hidden>この気分の日記はまだありません。</p>
+  </section>
+</BaseLayout>
+
+<script>
+  const buttons = document.querySelectorAll<HTMLButtonElement>('.filters button');
+  const cards = document.querySelectorAll<HTMLElement>('.feelgrid .card');
+  const empty = document.getElementById('feel-empty');
+
+  buttons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const mood = button.dataset.filter;
+      buttons.forEach((b) => b.setAttribute('aria-pressed', String(b === button)));
+      let shown = 0;
+      cards.forEach((card) => {
+        card.hidden = Boolean(mood) && card.dataset.mood !== mood;
+        if (!card.hidden) shown++;
+      });
+      if (empty) empty.hidden = shown > 0;
+    });
+  });
+</script>

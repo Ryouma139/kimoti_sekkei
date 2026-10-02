@@ -1,0 +1,29 @@
+---
+import MoodBlob from './MoodBlob.astro';
+import { MOODS } from '../lib/moods';
+import { monthDay, weekday, ymd } from '../lib/dates';
+import { url } from '../lib/url';
+import type { FeelEntry } from '../lib/data';
+
+interface Props {
+  entry: FeelEntry;
+}
+
+const { entry } = Astro.props;
+const day = ymd(entry.data.date);
+const excerpt = (entry.body ?? '').replace(/[#>*`_\-\[\]()]/g, '').replace(/\s+/g, ' ').trim().slice(0, 90);
+---
+
+<a class="card" href={url(`/feel/${entry.id}/`)} data-mood={entry.data.mood}>
+  <div class="top" style={`--c:${MOODS[entry.data.mood].color}`}>
+    <div class="date num">
+      {monthDay(day)}
+      <small>{weekday(day)}曜日 ・ {MOODS[entry.data.mood].label}</small>
+    </div>
+    <MoodBlob mood={entry.data.mood} />
+  </div>
+  <div class="body">
+    <h3>{entry.data.title}</h3>
+    {excerpt && <p>{excerpt}{(entry.body ?? '').length > 90 ? '…' : ''}</p>}
+  </div>
+</a>

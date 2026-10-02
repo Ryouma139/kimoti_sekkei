@@ -1,0 +1,52 @@
+---
+import MoodBlob from './MoodBlob.astro';
+import { MOODS, MOOD_KEYS, type Mood } from '../lib/moods';
+import { addDays, monthDay, WEEKDAY_LABELS, weekdayIndex } from '../lib/dates';
+
+interface Props {
+  moods: Record<string, Mood>;
+  minutes: Record<string, number>;
+  /** 最後の日（今日） */
+  end: string;
+  days?: number;
+}
+
+const { moods, minutes, end, days = 35 } = Astro.props;
+const start = addDays(end, -(days - 1));
+const blanks = weekdayIndex(start);
+const cells: string[] = [];
+for (let d = start; d <= end; d = addDays(d, 1)) cells.push(d);
+// バーが満タンになる学習時間（分）
+const FULL = 150;
+---
+
+<div class="cal">
+  {WEEKDAY_LABELS.map((w) => <div class="wd">{w}</div>)}
+  {Array.from({ length: blanks }, () => <div class="day empty" />)}
+  {
+    cells.map((d) => {
+      const min = minutes[d] ?? 0;
+      const label = `${monthDay(d)} ${moods[d] ? MOODS[moods[d]].label : '記録なし'}・学習${min}分`;
+      return (
+        <div class:list={['day', { 'is-today': d === end }]} title={label}>
+          <span class="num">{Number(d.slice(8, 10))}</span>
+          <MoodBlob mood={moods[d]} />
+          <span class="bar">
+            <i style={`width:${Math.min(100, (min / FULL) * 100)}%`} />
+          </span>
+        </div>
+      );
+    })
+  }
+</div>
+<div class="legend">
+  {
+    MOOD_KEYS.map((m) => (
+      <span>
+        <MoodBlob mood={m} size="18px" />
+        {MOODS[m].label}
+      </span>
+    ))
+  }
+  <span><span class="legend-bar"></span>学習時間</span>
+</div>

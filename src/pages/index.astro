@@ -1,0 +1,103 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import MoodBlob from '../components/MoodBlob.astro';
+import MoodCalendar from '../components/MoodCalendar.astro';
+import { getFeel, getLearn, getTech, minutesByDay, moodByDay, studyStreak } from '../lib/data';
+import { addDays, dotted, monthDay, todayJST, weekday, ymd } from '../lib/dates';
+import { MOODS } from '../lib/moods';
+import { url } from '../lib/url';
+
+const [feel, tech, learn] = await Promise.all([getFeel(), getTech(), getLearn()]);
+const today = todayJST();
+const byDay = minutesByDay(learn);
+const totalMinutes = learn.reduce((s, e) => s + e.data.minutes, 0);
+const latest = feel[0];
+const activeProjects = tech.filter((e) => e.data.type === 'project' && e.data.status === 'run').length;
+
+// 3種類の記録を新しい順に混ぜる
+type FeedItem = { kind: 'feel' | 'tech' | 'learn'; date: Date; title: string; meta: string; href: string; icon: string; entry?: (typeof feel)[number] };
+const feed: FeedItem[] = [
+  ...feel.slice(0, 4).map((e) => ({ kind: 'feel' as const, date: e.data.date, title: e.data.title, meta: 'きもち日記', href: `/feel/${e.id}/`, icon: '', entry: e })),
+  ...learn.slice(0, 4).map((e) => ({ kind: 'learn' as const, date: e.data.date, title: e.data.title, meta: e.data.category, href: `/learn/#${e.id}`, icon: `${e.data.minutes}m` })),
+  ...tech.slice(0, 4).map((e) => ({
+    kind: 'tech' as const,
+    date: e.data.updated ?? e.data.date,
+    title: e.data.title,
+    meta: e.data.type === 'project' ? `プロジェクト・進捗 ${e.data.progress ?? 0}%` : '考え方メモ',
+    href: `/tech/${e.id}/`,
+    icon: e.data.icon ?? e.data.title.slice(0, 2),
+  })),
+]
+  .sort((a, b) => b.date.getTime() - a.date.getTime())
+  .slice(0, 6);
+const KIND = { feel: 'きもち', tech: 'テック', learn: 'まなび' } as const;
+---
+
+<BaseLayout current="home">
+  <section class="view">
+    <div class="hero">
+      {
+        latest ? (
+          <a class="today" href={url(`/feel/${latest.id}/`)}>
+            <span class="eyebrow">
+              最新の気分 ・ {dotted(ymd(latest.data.date))} {weekday(ymd(latest.data.date))}
+            </span>
+            <div class="today-main">
+              <MoodBlob mood={latest.data.mood} size="88px" />
+              <div>
+                <p class="q">{MOODS[latest.data.mood].label}</p>
+                <h2>{latest.data.title}</h2>
+              </div>
+            </div>
+          </a>
+        ) : (
+          <div class="today">
+            <span class="eyebrow">{dotted(today)}</span>
+            <h2>きょうの気分は？</h2>
+            <p class="q">src/content/feel/ に最初の日記を書くと、ここに表示されます。</p>
+          </div>
+        )
+      }
+      <div class="stats">
+        <div class="stat learn"><b class="num">{Math.floor(totalMinutes / 60)}h</b><span>累計スタディタイム</span></div>
+        <div class="stat learn"><b class="num">{studyStreak(byDay, today)}日</b><span>連続学習ストリーク</span></div>
+        <div class="stat feel"><b class="num">{feel.length}</b><span>きもち日記</span></div>
+        <div class="stat tech"><b class="num">{activeProjects}</b><span>進行中のプロジェクト</span></div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="panel">
+        <h2>きもちカレンダー</h2>
+        <MoodCalendar moods={moodByDay(feel)} minutes={byDay} end={today} />
+        <p class="legend" style="margin-top:6px">{monthDay(addDays(today, -34))} 〜 {monthDay(today)}</p>
+      </div>
+      <div class="panel">
+        <h2>最近の記録</h2>
+        <div class="feed">
+          {feed.length === 0 && <p class="empty-note">まだ記録がありません。</p>}
+          {
+            feed.map((f) => (
+              <a class="row" href={url(f.href)}>
+                {f.kind === 'feel' && f.entry ? (
+                  <MoodBlob mood={f.entry.data.mood} size="44px" />
+                ) : (
+                  <span class="ico" style={`background:var(--${f.kind})`}>
+                    {f.icon}
+                  </span>
+                )}
+                <div>
+                  <div class="t">{f.title}</div>
+                  <div class="m">
+                    {monthDay(ymd(f.date))} ・ {f.meta}
+                  </div>
+                </div>
+                <span class:list={['kind', f.kind]}>{KIND[f.kind]}</span>
+              </a>
+            ))
+          }
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

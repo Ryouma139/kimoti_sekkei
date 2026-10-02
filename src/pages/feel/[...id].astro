@@ -1,0 +1,37 @@
+---
+import { render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import MoodBlob from '../../components/MoodBlob.astro';
+import TagList from '../../components/TagList.astro';
+import { getFeel } from '../../lib/data';
+import { dotted, weekday, ymd } from '../../lib/dates';
+import { MOODS } from '../../lib/moods';
+import { url } from '../../lib/url';
+
+export async function getStaticPaths() {
+  const feel = await getFeel();
+  return feel.map((entry) => ({ params: { id: entry.id }, props: { entry } }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const day = ymd(entry.data.date);
+---
+
+<BaseLayout title={entry.data.title} current="feel">
+  <article class="view">
+    <a class="back" href={url('/feel/')}>← きもち日記</a>
+    <header class="post-head" style={`--c:${MOODS[entry.data.mood].color}`}>
+      <div class="head">
+        <span class="meta num">
+          {dotted(day)}（{weekday(day)}） ・ {MOODS[entry.data.mood].label}
+          {entry.data.weather && ` ・ ${entry.data.weather}`}
+        </span>
+        <h1>{entry.data.title}</h1>
+      </div>
+      <MoodBlob mood={entry.data.mood} />
+    </header>
+    <div class="prose"><Content /></div>
+    <TagList tags={entry.data.tags} />
+  </article>
+</BaseLayout>

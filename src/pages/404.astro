@@ -1,0 +1,14 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import MoodBlob from '../components/MoodBlob.astro';
+import { url } from '../lib/url';
+---
+
+<BaseLayout title="ページが見つかりません">
+  <section class="view" style="align-items:flex-start">
+    <MoodBlob mood="meh" size="96px" />
+    <h1>ページが見つかりません</h1>
+    <p>URLが変わったか、削除された可能性があります。</p>
+    <a class="chip" href={url('/')}>ホームへ戻る</a>
+  </section>
+</BaseLayout>

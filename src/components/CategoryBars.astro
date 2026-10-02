@@ -1,0 +1,27 @@
+---
+import { CATEGORIES, CATEGORY_KEYS } from '../lib/categories';
+
+interface Props {
+  totals: Record<string, number>;
+}
+
+const { totals } = Astro.props;
+const max = Math.max(1, ...Object.values(totals));
+const fmt = (m: number) => `${Math.floor(m / 60)}h${String(m % 60).padStart(2, '0')}`;
+---
+
+<div class="cats">
+  {
+    CATEGORY_KEYS.map((c) => (
+      <div class="cat">
+        <span>
+          <span class="swatch" style={`background:${CATEGORIES[c]}`} /> {c}
+        </span>
+        <span class="track">
+          <i style={`width:${((totals[c] ?? 0) / max) * 100}%;background:${CATEGORIES[c]}`} />
+        </span>
+        <b class="num">{fmt(totals[c] ?? 0)}</b>
+      </div>
+    ))
+  }
+</div>

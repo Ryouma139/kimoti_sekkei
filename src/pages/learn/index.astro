@@ -1,0 +1,66 @@
+---
+import { render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import StudyChart from '../../components/StudyChart.astro';
+import CategoryBars from '../../components/CategoryBars.astro';
+import TagList from '../../components/TagList.astro';
+import { getLearn, minutesByCategory, minutesByDayCategory } from '../../lib/data';
+import { addDays, dotted, formatMinutes, todayJST, ymd } from '../../lib/dates';
+import { CATEGORIES } from '../../lib/categories';
+
+const learn = await getLearn();
+const today = todayJST();
+const week = minutesByDayCategory(learn, addDays(today, -6), today);
+const weekTotal = week.reduce((s, d) => s + Object.values(d.values).reduce((a, b) => a + b, 0), 0);
+const month = today.slice(0, 7);
+const items = await Promise.all(learn.map(async (entry) => ({ entry, Content: (await render(entry)).Content })));
+---
+
+<BaseLayout title="まなびログ" current="learn">
+  <section class="view">
+    <div class="head">
+      <span class="eyebrow" style="color:var(--learn)">LEARN ／ まなびログ</span>
+      <h1>今週のスタディタイム <span class="num">{formatMinutes(weekTotal)}</span></h1>
+      <p>学んだことを1件ずつ、かかった時間と一緒に記録しています。時間はカテゴリ別に集計され、ホームのカレンダーにも反映されます。</p>
+    </div>
+    <div class="grid2">
+      <div class="panel">
+        <h2>直近7日（分）</h2>
+        <StudyChart days={week} highlight={today} />
+      </div>
+      <div class="panel">
+        <h2>カテゴリ別・{Number(month.slice(5, 7))}月</h2>
+        <CategoryBars totals={minutesByCategory(learn, month)} />
+      </div>
+    </div>
+    <div>
+      <h2 class="section-title">学んだこと（TIL）</h2>
+      {learn.length === 0 && <p class="empty-note">まだ記録がありません。</p>}
+      <ul class="til">
+        {
+          items.map(({ entry, Content }) => (
+            <li id={entry.id}>
+              <span class="min num">
+                {entry.data.minutes}
+                <small>分</small>
+              </span>
+              <div class="d">
+                <span class="t" style="color:var(--fg)">{entry.data.title}</span>
+                <span class="num">{dotted(ymd(entry.data.date))}</span>
+                <div class="prose" style="font-size:14px;line-height:1.8">
+                  <Content />
+                </div>
+                {entry.data.source && <a href={entry.data.source}>参考リンク</a>}
+                <TagList tags={entry.data.tags} />
+              </div>
+              <span class="chip">
+                <span class="swatch" style={`background:${CATEGORIES[entry.data.category]}`} />
+                {entry.data.category}
+              </span>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+</BaseLayout>
