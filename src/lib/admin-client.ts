@@ -192,7 +192,7 @@ interface AdminFormSpec {
 /**
  * 3つの記事フォームで共通の動き。
  * - ファイル名と「保存される内容」のプレビューを更新
- * - data-today の日付欄に今日を入れる
+ * - data-today の日付欄に今日（URL に ?date= があればその日）を入れる
  * - 保存ボタンで GitHub にコミットし、結果を表示
  * - URL に ?edit=<ファイルのパス> があれば、その記事を GitHub から読み込んで修正モードにする
  *   （data-lock-on-edit の項目＝ファイル名に関わる日付・スラッグは変更不可）
@@ -210,7 +210,14 @@ export function setupAdminForm(spec: AdminFormSpec): void {
   const ctx = (): AdminFormContext => ({ editing: Boolean(editing), created: editing ? editing.created : nowJST() });
   const currentPath = () => editing?.path ?? spec.path();
 
-  const setToday = () => form.querySelectorAll<HTMLInputElement>('input[data-today]').forEach((el) => (el.value = todayJST()));
+  // カレンダーから来たとき（?date=2026-10-04）は、最初だけその日付を入れる
+  let initialDate = new URLSearchParams(location.search).get('date');
+  if (!initialDate || !/^\d{4}-\d{2}-\d{2}$/.test(initialDate)) initialDate = null;
+  const setToday = () => {
+    const date = initialDate ?? todayJST();
+    initialDate = null;
+    form.querySelectorAll<HTMLInputElement>('input[data-today]').forEach((el) => (el.value = date));
+  };
   const refresh = () => {
     spec.onChange?.();
     if (filename) filename.textContent = currentPath();
