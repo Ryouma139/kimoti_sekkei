@@ -111,6 +111,8 @@ async function putFile(token: string, path: string, content: string, message: st
   });
   if (res.status === 401 || res.status === 403) throw new Error('書き込む権限がありません。トークンの Contents 権限を確認してください。');
   if (res.status === 409) throw new Error('GitHub 上でこの記事が変更されています。ページを読み込み直してから修正してください。');
+  // 新規作成（sha なし）で 422 になるのは、確認のあと保存までの間に同じファイルが作られた場合（別のタブから同時に保存など）
+  if (res.status === 422 && !sha) throw new Error(`同じファイル名の記事がすでにあります（${path}）。`);
   if (!res.ok) throw new Error(`保存に失敗しました（${res.status}）。`);
   const json = await res.json().catch(() => ({}));
   return { commitUrl: json?.commit?.html_url, sha: json?.content?.sha };
