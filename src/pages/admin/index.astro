@@ -1,0 +1,89 @@
+---
+// 管理画面のトップ：GitHub トークンの設定と、各記事フォームへの入口。
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getFeel, getLearn, getTech } from '../../lib/data';
+import { REPO, BRANCH } from '../../lib/admin-client';
+import { dotted, ymd } from '../../lib/dates';
+import { url } from '../../lib/url';
+
+const [feel, tech, learn] = await Promise.all([getFeel(), getTech(), getLearn()]);
+const latest = (list: { data: { date: Date } }[]) => (list[0] ? dotted(ymd(list[0].data.date)) : 'まだなし');
+
+const MENU = [
+  { href: '/admin/feel/', kind: 'feel', title: 'きもち日記を書く', text: 'その日の気分と出来事', count: feel.length, last: latest(feel) },
+  { href: '/admin/learn/', kind: 'learn', title: 'まなびログを書く', text: '学んだことと、かかった時間', count: learn.length, last: latest(learn) },
+  { href: '/admin/tech/', kind: 'tech', title: 'テックノートを書く', text: 'プロジェクトと考え方メモ', count: tech.length, last: latest(tech) },
+];
+---
+
+<BaseLayout title="管理画面" noindex>
+  <section class="view admin">
+    <div class="head">
+      <span class="eyebrow" style="color:var(--accent)">ADMIN ／ 管理画面</span>
+      <h1>記事を書く</h1>
+      <p>書いた記事は GitHub の {REPO}（{BRANCH}）に Markdown としてコミットされ、自動デプロイで公開されます。</p>
+    </div>
+
+    <div class="admin-menu">
+      {
+        MENU.map((m) => (
+          <a class="admin-card" href={url(m.href)} style={`--c:var(--${m.kind});--soft:var(--${m.kind}-soft)`}>
+            <span class="eyebrow">{m.kind.toUpperCase()}</span>
+            <h2>{m.title}</h2>
+            <p>{m.text}</p>
+            <small>
+              {m.count}件 ・ 最新 {m.last}
+            </small>
+          </a>
+        ))
+      }
+    </div>
+
+    <div class="panel token-box">
+      <h2>GitHub トークン</h2>
+      <p class="hint">
+        保存に使います。GitHub の Settings → Developer settings → Fine-grained tokens で、このリポジトリだけに
+        <b>Contents: Read and write</b> を付けたトークンを作って貼ってください。
+      </p>
+      <form id="token-form">
+        <input id="token" type="password" autocomplete="off" placeholder="github_pat_..." />
+        <label class="check"><input id="remember" type="checkbox" /> このブラウザに保存する（オフならタブを閉じるまで）</label>
+        <div class="actions">
+          <button type="submit" class="primary">設定する</button>
+          <button type="button" class="secondary" id="token-clear">消す</button>
+          <p class="status-msg" id="token-status" role="status" aria-live="polite"></p>
+        </div>
+      </form>
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  import { getToken, isTokenRemembered, saveToken } from '../../lib/admin-client';
+
+  const form = document.getElementById('token-form') as HTMLFormElement;
+  const input = document.getElementById('token') as HTMLInputElement;
+  const remember = document.getElementById('remember') as HTMLInputElement;
+  const status = document.getElementById('token-status')!;
+
+  const show = () => {
+    const set = Boolean(getToken());
+    status.textContent = set ? `設定済み（${isTokenRemembered() ? 'このブラウザに保存' : 'タブを閉じるまで'}）` : '未設定';
+    status.className = `status-msg ${set ? 'ok' : 'error'}`;
+  };
+
+  input.value = getToken();
+  remember.checked = isTokenRemembered();
+  show();
+
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    saveToken(input.value.trim(), remember.checked);
+    show();
+  });
+  document.getElementById('token-clear')!.addEventListener('click', () => {
+    input.value = '';
+    saveToken('', false);
+    show();
+  });
+</script>

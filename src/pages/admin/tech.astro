@@ -1,0 +1,141 @@
+---
+// テックノートのフォーム。項目は src/content.config.ts の tech と同じ。
+// 種類が「プロジェクト」のときだけ、アイコン・状態・進捗・技術スタック・リポジトリの欄を出す。
+import AdminShell from '../../components/AdminShell.astro';
+import AdminSubmit from '../../components/AdminSubmit.astro';
+
+const NOTE_TEMPLATE = '## 背景\n\n## 決定\n\n## 理由\n';
+---
+
+<AdminShell
+  title="テックノートを書く"
+  eyebrow="ADMIN ／ TECH"
+  color="var(--tech)"
+  lead="プロジェクトの記録や、技術的な考え方のメモを残します。ファイル名は「スラッグ」になり、記事のURLにも使われます。"
+>
+  <form class="panel admin-form" id="admin-form" novalidate>
+    <fieldset class="field">
+      <legend>種類</legend>
+      <div class="choice-row">
+        <label class="choice"><input type="radio" name="type" value="note" checked /> 考え方メモ</label>
+        <label class="choice"><input type="radio" name="type" value="project" /> プロジェクト</label>
+      </div>
+    </fieldset>
+
+    <label class="field">
+      <span>タイトル</span>
+      <input name="title" required placeholder="例：ブログをCMSではなくMarkdown＋Gitで管理する" />
+    </label>
+
+    <label class="field">
+      <span>スラッグ（英小文字・数字・ハイフン）</span>
+      <input name="slug" required placeholder="例：markdown-over-cms" />
+    </label>
+
+    <div class="field-row">
+      <label class="field">
+        <span>作成日</span>
+        <input name="date" type="date" required data-today />
+      </label>
+      <label class="field">
+        <span>更新日（任意）</span>
+        <input name="updated" type="date" />
+      </label>
+    </div>
+
+    <label class="field">
+      <span>概要（任意）</span>
+      <input name="summary" placeholder="一覧に出る一行説明" />
+    </label>
+
+    <div class="project-only" data-project-only hidden>
+      <div class="field-row">
+        <label class="field">
+          <span>アイコン文字（3文字まで）</span>
+          <input name="icon" maxlength="3" placeholder="例：KC" />
+        </label>
+        <label class="field">
+          <span>状態</span>
+          <select name="status">
+            <option value="plan">計画中</option>
+            <option value="run">進行中</option>
+            <option value="done">完了</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>進捗（%）</span>
+          <input name="progress" type="number" min="0" max="100" step="1" value="0" />
+        </label>
+      </div>
+      <label class="field">
+        <span>技術スタック（カンマ区切り、任意）</span>
+        <input name="stack" placeholder="例：Astro, TypeScript" />
+      </label>
+      <label class="field">
+        <span>リポジトリURL（任意）</span>
+        <input name="repo" type="url" placeholder="https://github.com/..." />
+      </label>
+    </div>
+
+    <label class="field">
+      <span>タグ（カンマ区切り、任意）</span>
+      <input name="tags" placeholder="例：設計判断, テスト" />
+    </label>
+
+    <label class="check"><input name="draft" type="checkbox" /> 下書き（一覧・詳細に表示しない）</label>
+
+    <label class="field">
+      <span>本文（Markdown）</span>
+      <textarea name="body" rows="14" required>{NOTE_TEMPLATE}</textarea>
+    </label>
+
+    <AdminSubmit />
+  </form>
+</AdminShell>
+
+<script>
+  import { checked, isSlug, isUrl, setupAdminForm, splitList, toMarkdown, value, yamlString } from '../../lib/admin-client';
+
+  const form = document.getElementById('admin-form') as HTMLFormElement;
+  const projectOnly = form.querySelector<HTMLElement>('[data-project-only]')!;
+  const isProject = () => form.querySelector<HTMLInputElement>('input[name="type"]:checked')?.value === 'project';
+  const optional = (name: string) => (value(form, name) ? yamlString(value(form, name)) : undefined);
+  const project = (v: string | undefined) => (isProject() ? v : undefined);
+
+  setupAdminForm({
+    form,
+    onChange: () => (projectOnly.hidden = !isProject()),
+    path: () => `src/content/tech/${value(form, 'slug') || 'slug'}.md`,
+    message: () => `テックノート: ${value(form, 'title')}`,
+    markdown: () =>
+      toMarkdown(
+        [
+          ['type', isProject() ? 'project' : 'note'],
+          ['title', yamlString(value(form, 'title'))],
+          ['date', value(form, 'date')],
+          ['updated', value(form, 'updated') || undefined],
+          ['summary', optional('summary')],
+          ['icon', project(optional('icon'))],
+          ['status', project(value(form, 'status'))],
+          ['progress', project(value(form, 'progress'))],
+          ['stack', project(JSON.stringify(splitList(value(form, 'stack'))))],
+          ['repo', project(optional('repo'))],
+          ['tags', JSON.stringify(splitList(value(form, 'tags')))],
+          ['draft', checked(form, 'draft') ? 'true' : undefined],
+        ],
+        value(form, 'body'),
+      ),
+    validate: () => {
+      if (!value(form, 'title') || !value(form, 'date') || !value(form, 'body')) return 'タイトル・作成日・本文を入力してください。';
+      if (!isSlug(value(form, 'slug'))) return 'スラッグは英小文字・数字・ハイフンで入力してください（例：my-app）。';
+      if (value(form, 'updated') && value(form, 'updated') < value(form, 'date')) return '更新日は作成日より後にしてください。';
+      if (isProject()) {
+        if (value(form, 'icon').length > 3) return 'アイコン文字は3文字までです。';
+        const progress = Number(value(form, 'progress'));
+        if (!Number.isInteger(progress) || progress < 0 || progress > 100) return '進捗は0〜100の整数で入力してください。';
+        if (value(form, 'repo') && !isUrl(value(form, 'repo'))) return 'リポジトリURLは https:// から始まるURLで入力してください。';
+      }
+      return null;
+    },
+  });
+</script>

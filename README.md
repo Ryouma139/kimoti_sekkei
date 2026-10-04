@@ -88,6 +88,33 @@ tags: []
 
 どの記事も `draft: true` にすると公開されません。
 
+## 管理画面（ブラウザで記事を書く）
+
+`/admin/` が管理画面のトップです。GitHub トークンを設定し、書きたい記事の種類を選んでフォームに進みます。「保存して公開」を押すと Markdown が GitHub の main ブランチに直接コミットされ、自動デプロイで公開されます。DB は使いません。
+
+| URL | 内容 | 保存先 |
+|---|---|---|
+| `/admin/` | トップ（トークン設定・各フォームへの入口・記事数） | — |
+| `/admin/feel/` | きもち日記 | `src/content/feel/<日付>.md` |
+| `/admin/learn/` | まなびログ | `src/content/learn/<日付>-<スラッグ>.md` |
+| `/admin/tech/` | テックノート（「プロジェクト」を選ぶと進捗などの欄が出る） | `src/content/tech/<スラッグ>.md` |
+
+ファイル: `src/pages/admin/`（各ページ）、`src/components/AdminShell.astro`・`AdminSubmit.astro`（共通の枠と保存ボタン）、`src/lib/admin-client.ts`（トークン保存・GitHub への保存などブラウザ側の共通処理）
+
+**はじめに：GitHub トークンを作る**
+
+1. GitHub の Settings → Developer settings → Personal access tokens → **Fine-grained tokens** → Generate new token
+2. Repository access で **このリポジトリだけ** を選ぶ
+3. Permissions の **Contents** を **Read and write** にする（ほかは不要）。有効期限も付けておく
+4. できたトークンを `/admin/` の「GitHub トークン」欄に貼って「設定する」（「このブラウザに保存する」をオンにすると次回から入力不要。オフならタブを閉じるまで有効）
+
+**注意**
+
+- トークンはブラウザから GitHub に直接送られるだけで、このサイトのサーバーには送られません。ただしパスワードと同じ扱いで、人に見せたりコードに書いたりしないでください。
+- 同じファイル名の記事がすでにあるときは保存しません（上書き防止）。既存の記事を直すときは GitHub かエディタで編集してください。
+- 管理画面はサイドバーに出していません。`/admin/` を直接開いてください。検索エンジンには載せない設定（noindex）にしてあります。
+- 気分・カテゴリ・関連プロジェクトの選択肢は、`src/lib/moods.ts`・`src/lib/categories.ts`・テックノートのプロジェクトから自動で作られます（関連プロジェクトはビルド時点のもの）。
+
 ## カスタマイズ
 
 | やりたいこと | 編集するファイル |

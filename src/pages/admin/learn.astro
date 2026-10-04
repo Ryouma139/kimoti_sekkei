@@ -1,0 +1,111 @@
+---
+// まなびログのフォーム。項目は src/content.config.ts の learn と同じ。
+import AdminShell from '../../components/AdminShell.astro';
+import AdminSubmit from '../../components/AdminSubmit.astro';
+import { CATEGORY_KEYS } from '../../lib/categories';
+import { getTech } from '../../lib/data';
+
+// 「関連プロジェクト」の選択肢（tech の project）
+const projects = (await getTech()).filter((e) => e.data.type === 'project');
+---
+
+<AdminShell
+  title="まなびログを書く"
+  eyebrow="ADMIN ／ LEARN"
+  color="var(--learn)"
+  lead="学んだことを1件ずつ、かかった時間と一緒に残します。ファイル名は「日付-スラッグ」になります。"
+>
+  <form class="panel admin-form" id="admin-form" novalidate>
+    <label class="field">
+      <span>タイトル</span>
+      <input name="title" required placeholder="例：IAMロールの信頼ポリシーと権限ポリシーの違い" />
+    </label>
+
+    <div class="field-row">
+      <label class="field">
+        <span>日付</span>
+        <input name="date" type="date" required data-today />
+      </label>
+      <label class="field">
+        <span>スラッグ（英小文字・数字・ハイフン）</span>
+        <input name="slug" required placeholder="例：iam-policy" />
+      </label>
+    </div>
+
+    <div class="field-row">
+      <label class="field">
+        <span>かかった時間（分）</span>
+        <input name="minutes" type="number" min="1" step="1" required value="30" />
+      </label>
+      <label class="field">
+        <span>カテゴリ</span>
+        <select name="category">
+          {CATEGORY_KEYS.map((c) => <option value={c}>{c}</option>)}
+        </select>
+      </label>
+    </div>
+
+    <label class="field">
+      <span>関連プロジェクト（任意）</span>
+      <select name="project">
+        <option value="">なし</option>
+        {projects.map((p) => <option value={p.id}>{p.data.title}</option>)}
+      </select>
+      <small>選ぶと、テックノートのプロジェクトに学習時間が合計されます。</small>
+    </label>
+
+    <label class="field">
+      <span>参考URL（任意）</span>
+      <input name="source" type="url" placeholder="https://" />
+    </label>
+
+    <label class="field">
+      <span>タグ（カンマ区切り、任意）</span>
+      <input name="tags" placeholder="例：AWS, 自動化" />
+    </label>
+
+    <label class="check"><input name="draft" type="checkbox" /> 下書き（一覧に表示しない）</label>
+
+    <label class="field">
+      <span>学んだこと（Markdown）</span>
+      <textarea name="body" rows="10" required placeholder="学んだことを短くまとめます。"></textarea>
+    </label>
+
+    <AdminSubmit />
+  </form>
+</AdminShell>
+
+<script>
+  import { checked, isSlug, isUrl, setupAdminForm, splitList, toMarkdown, value, yamlString } from '../../lib/admin-client';
+
+  const form = document.getElementById('admin-form') as HTMLFormElement;
+  const optional = (name: string, quote = true) => (value(form, name) ? (quote ? yamlString(value(form, name)) : value(form, name)) : undefined);
+
+  setupAdminForm({
+    form,
+    path: () => `src/content/learn/${value(form, 'date')}-${value(form, 'slug') || 'slug'}.md`,
+    message: () => `まなびログ: ${value(form, 'date')} ${value(form, 'title')}`,
+    markdown: () =>
+      toMarkdown(
+        [
+          ['title', yamlString(value(form, 'title'))],
+          ['date', value(form, 'date')],
+          ['minutes', value(form, 'minutes')],
+          ['category', yamlString(value(form, 'category'))],
+          ['project', optional('project')],
+          ['tags', JSON.stringify(splitList(value(form, 'tags')))],
+          ['source', optional('source')],
+          ['draft', checked(form, 'draft') ? 'true' : undefined],
+        ],
+        value(form, 'body'),
+      ),
+    validate: () => {
+      if (!value(form, 'title') || !value(form, 'date') || !value(form, 'body')) return 'タイトル・日付・本文を入力してください。';
+      if (!isSlug(value(form, 'slug'))) return 'スラッグは英小文字・数字・ハイフンで入力してください（例：iam-policy）。';
+      const minutes = Number(value(form, 'minutes'));
+      if (!Number.isInteger(minutes) || minutes < 1) return 'かかった時間は1以上の整数（分）で入力してください。';
+      if (value(form, 'source') && !isUrl(value(form, 'source'))) return '参考URLは https:// から始まるURLで入力してください。';
+      return null;
+    },
+  });
+</script>

@@ -10,10 +10,12 @@ interface Props {
   title?: string;
   description?: string;
   current?: Section;
+  /** 検索エンジンに載せない（管理画面など） */
+  noindex?: boolean;
 }
 
 const SITE = 'きもちとコード';
-const { title, description = 'きもちと学びを記録する、エンジニアの日記。', current } = Astro.props;
+const { title, description = 'きもちと学びを記録する、エンジニアの日記。', current, noindex } = Astro.props;
 const pageTitle = title ? `${title} | ${SITE}` : SITE;
 
 const NAV: { key: Section; href: string; label: string; color: string }[] = [
@@ -33,6 +35,7 @@ const NAV: { key: Section; href: string; label: string; color: string }[] = [
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{pageTitle}</title>
     <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex" />}
     <link rel="icon" type="image/svg+xml" href={url('/favicon.svg')} />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

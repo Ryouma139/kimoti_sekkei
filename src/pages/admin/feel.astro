@@ -1,0 +1,81 @@
+---
+// きもち日記のフォーム。項目は src/content.config.ts の feel と同じ。
+import AdminShell from '../../components/AdminShell.astro';
+import AdminSubmit from '../../components/AdminSubmit.astro';
+import MoodBlob from '../../components/MoodBlob.astro';
+import { MOODS, MOOD_KEYS } from '../../lib/moods';
+---
+
+<AdminShell title="きもち日記を書く" eyebrow="ADMIN ／ FEEL" color="var(--feel)" lead="その日の気分と出来事を残します。ファイル名は日付になります（1日1件）。">
+  <form class="panel admin-form" id="admin-form" novalidate>
+    <label class="field">
+      <span>タイトル</span>
+      <input name="title" required placeholder="例：初めてPRがマージされた" />
+    </label>
+
+    <label class="field">
+      <span>日付</span>
+      <input name="date" type="date" required data-today />
+    </label>
+
+    <fieldset class="field">
+      <legend>気分</legend>
+      <div class="mood-pick">
+        {
+          MOOD_KEYS.map((m) => (
+            <label>
+              <input type="radio" name="mood" value={m} checked={m === 'calm'} />
+              <MoodBlob mood={m} size="44px" />
+              <span>{MOODS[m].label}</span>
+            </label>
+          ))
+        }
+      </div>
+    </fieldset>
+
+    <label class="field">
+      <span>天気（任意）</span>
+      <input name="weather" placeholder="例：晴れ" />
+    </label>
+
+    <label class="field">
+      <span>タグ（カンマ区切り、任意）</span>
+      <input name="tags" placeholder="例：仕事, 散歩" />
+    </label>
+
+    <label class="check"><input name="draft" type="checkbox" /> 下書き（一覧・詳細に表示しない）</label>
+
+    <label class="field">
+      <span>本文（Markdown）</span>
+      <textarea name="body" rows="12" required placeholder="きょうあったこと、感じたことを書きます。"></textarea>
+    </label>
+
+    <AdminSubmit />
+  </form>
+</AdminShell>
+
+<script>
+  import { checked, setupAdminForm, splitList, toMarkdown, value, yamlString } from '../../lib/admin-client';
+
+  const form = document.getElementById('admin-form') as HTMLFormElement;
+  const mood = () => form.querySelector<HTMLInputElement>('input[name="mood"]:checked')?.value ?? 'calm';
+
+  setupAdminForm({
+    form,
+    path: () => `src/content/feel/${value(form, 'date')}.md`,
+    message: () => `きもち日記: ${value(form, 'date')} ${value(form, 'title')}`,
+    markdown: () =>
+      toMarkdown(
+        [
+          ['title', yamlString(value(form, 'title'))],
+          ['date', value(form, 'date')],
+          ['mood', mood()],
+          ['weather', value(form, 'weather') ? yamlString(value(form, 'weather')) : undefined],
+          ['tags', JSON.stringify(splitList(value(form, 'tags')))],
+          ['draft', checked(form, 'draft') ? 'true' : undefined],
+        ],
+        value(form, 'body'),
+      ),
+    validate: () => (!value(form, 'title') || !value(form, 'date') || !value(form, 'body') ? 'タイトル・日付・本文を入力してください。' : null),
+  });
+</script>

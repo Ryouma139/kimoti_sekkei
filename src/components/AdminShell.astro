@@ -1,0 +1,30 @@
+---
+// 管理画面の各フォームページの枠（戻るリンク・見出し・トークン未設定の警告）
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { url } from '../lib/url';
+
+interface Props {
+  title: string;
+  eyebrow: string;
+  /** 見出しの色（例: var(--feel)） */
+  color: string;
+  lead: string;
+}
+
+const { title, eyebrow, color, lead } = Astro.props;
+---
+
+<BaseLayout title={`${title} | 管理画面`} noindex>
+  <section class="view admin">
+    <a class="back" href={url('/admin/')}>← 管理画面</a>
+    <div class="head">
+      <span class="eyebrow" style={`color:${color}`}>{eyebrow}</span>
+      <h1>{title}</h1>
+      <p>{lead}</p>
+    </div>
+    <p class="panel token-warning" data-token-warning hidden>
+      GitHub トークンが設定されていないため、保存できません。<a href={url('/admin/')}>管理画面のトップ</a>で設定してください。
+    </p>
+    <slot />
+  </section>
+</BaseLayout>
