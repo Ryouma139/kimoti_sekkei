@@ -1330,3 +1330,18 @@ th {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* 管理画面：既存記事の修正モード（?edit=） */
+.edit-banner {
+  border-color: var(--accent);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.edit-banner code {
+  font: 13px var(--f-mono);
+}
+.admin input[readonly] {
+  color: var(--muted);
+  background: var(--chip);
+  cursor: not-allowed;
+}

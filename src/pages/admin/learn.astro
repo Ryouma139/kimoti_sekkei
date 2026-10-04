@@ -24,11 +24,11 @@ const projects = (await getTech()).filter((e) => e.data.type === 'project');
     <div class="field-row">
       <label class="field">
         <span>日付</span>
-        <input name="date" type="date" required data-today />
+        <input name="date" type="date" required data-today data-lock-on-edit />
       </label>
       <label class="field">
         <span>スラッグ（英小文字・数字・ハイフン）</span>
-        <input name="slug" required placeholder="例：iam-policy" autocapitalize="off" spellcheck="false" />
+        <input name="slug" required data-lock-on-edit placeholder="例：iam-policy" autocapitalize="off" spellcheck="false" />
       </label>
     </div>
 
@@ -76,7 +76,7 @@ const projects = (await getTech()).filter((e) => e.data.type === 'project');
 </AdminShell>
 
 <script>
-  import { nowJST, articleFileName, checked, isSlug, isUrl, setupAdminForm, splitList, toMarkdown, value, yamlString } from '../../lib/admin-client';
+  import { articleFileName, checked, isSlug, isUrl, setupAdminForm, splitList, toMarkdown, value, yamlString } from '../../lib/admin-client';
 
   const form = document.getElementById('admin-form') as HTMLFormElement;
   const optional = (name: string, quote = true) => (value(form, name) ? (quote ? yamlString(value(form, name)) : value(form, name)) : undefined);
@@ -85,12 +85,12 @@ const projects = (await getTech()).filter((e) => e.data.type === 'project');
     form,
     path: () => `src/content/learn/${articleFileName(value(form, 'date'), value(form, 'slug'))}.md`,
     message: () => `まなびログ: ${value(form, 'date')} ${value(form, 'title')}`,
-    markdown: () =>
+    markdown: (ctx) =>
       toMarkdown(
         [
           ['title', yamlString(value(form, 'title'))],
           ['date', value(form, 'date')],
-          ['created', yamlString(nowJST())],
+          ['created', ctx.created === undefined ? undefined : yamlString(ctx.created)],
           ['minutes', value(form, 'minutes')],
           ['category', yamlString(value(form, 'category'))],
           ['project', optional('project')],
@@ -100,9 +100,9 @@ const projects = (await getTech()).filter((e) => e.data.type === 'project');
         ],
         value(form, 'body'),
       ),
-    validate: () => {
+    validate: (ctx) => {
       if (!value(form, 'title') || !value(form, 'date') || !value(form, 'body')) return 'タイトル・日付・本文を入力してください。';
-      if (!isSlug(value(form, 'slug'))) return 'スラッグは英小文字・数字・ハイフンで入力してください（例：iam-policy）。';
+      if (!ctx.editing && !isSlug(value(form, 'slug'))) return 'スラッグは英小文字・数字・ハイフンで入力してください（例：iam-policy）。';
       const minutes = Number(value(form, 'minutes'));
       if (!Number.isInteger(minutes) || minutes < 1) return 'かかった時間は1以上の整数（分）で入力してください。';
       if (value(form, 'source') && !isUrl(value(form, 'source'))) return '参考URLは https:// から始まるURLで入力してください。';

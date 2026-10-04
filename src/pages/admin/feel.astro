@@ -21,7 +21,7 @@ const usedDays = (await getFeel()).map((e) => ymd(e.data.date)).join(',');
 
     <label class="field">
       <span>日付</span>
-      <input name="date" type="date" required data-today />
+      <input name="date" type="date" required data-today data-lock-on-edit />
     </label>
 
     <fieldset class="field">
@@ -61,7 +61,7 @@ const usedDays = (await getFeel()).map((e) => ymd(e.data.date)).join(',');
 </AdminShell>
 
 <script>
-  import { nowJST, checked, setupAdminForm, splitList, toMarkdown, value, yamlString } from '../../lib/admin-client';
+  import { checked, setupAdminForm, splitList, toMarkdown, value, yamlString } from '../../lib/admin-client';
 
   const form = document.getElementById('admin-form') as HTMLFormElement;
   const usedDays = new Set((form.dataset.usedDays ?? '').split(',').filter(Boolean));
@@ -71,12 +71,12 @@ const usedDays = (await getFeel()).map((e) => ymd(e.data.date)).join(',');
     form,
     path: () => `src/content/feel/${value(form, 'date')}.md`,
     message: () => `きもち日記: ${value(form, 'date')} ${value(form, 'title')}`,
-    markdown: () =>
+    markdown: (ctx) =>
       toMarkdown(
         [
           ['title', yamlString(value(form, 'title'))],
           ['date', value(form, 'date')],
-          ['created', yamlString(nowJST())],
+          ['created', ctx.created === undefined ? undefined : yamlString(ctx.created)],
           ['mood', mood()],
           ['weather', value(form, 'weather') ? yamlString(value(form, 'weather')) : undefined],
           ['tags', JSON.stringify(splitList(value(form, 'tags')))],
@@ -84,9 +84,9 @@ const usedDays = (await getFeel()).map((e) => ymd(e.data.date)).join(',');
         ],
         value(form, 'body'),
       ),
-    validate: () => {
+    validate: (ctx) => {
       if (!value(form, 'title') || !value(form, 'date') || !value(form, 'body')) return 'タイトル・日付・本文を入力してください。';
-      if (usedDays.has(value(form, 'date'))) return `${value(form, 'date')} のきもち日記はすでにあります（1日1件）。直すときは GitHub かエディタで編集してください。`;
+      if (!ctx.editing && usedDays.has(value(form, 'date'))) return `${value(form, 'date')} のきもち日記はすでにあります（1日1件）。直すときは「保存記事一覧」の「管理画面で修正」から修正してください。`;
       return null;
     },
   });

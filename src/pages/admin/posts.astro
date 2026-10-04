@@ -22,7 +22,7 @@ const toRow = (kind: Kind, e: { id: string; filePath?: string; data: { title: st
     filePath,
     // 下書きはサイトにページがないので、サイトへのリンクは出さない
     siteHref: e.data.draft ? undefined : url(kind === 'learn' ? `/learn/#${e.id}` : `/${kind}/${e.id}/`),
-    githubHref: `https://github.com/${REPO}/blob/${BRANCH}/${encoded}`,
+    adminEditHref: url(`/admin/${kind}/?edit=${encodeURIComponent(filePath)}`),
     editHref: `https://github.com/${REPO}/edit/${BRANCH}/${encoded}`,
   };
 };
@@ -39,7 +39,7 @@ const KINDS: Kind[] = ['feel', 'learn', 'tech'];
   title="保存記事一覧"
   eyebrow="ADMIN ／ POSTS"
   color="var(--accent)"
-  lead="リポジトリにある記事（Markdown）を、下書きも含めてすべて表示します。直すときは「GitHubで編集」から編集してください（トークン設定時のみ表示）。"
+  lead="リポジトリにある記事（Markdown）を、下書きも含めてすべて表示します。直すときは「管理画面で修正」か「GitHubで編集」から（トークン設定時のみ表示）。"
   section="posts"
   tokenWarning={false}
 >
@@ -63,7 +63,7 @@ const KINDS: Kind[] = ['feel', 'learn', 'tech'];
       <span data-post-count>{rows.length}</span>件を表示中 ・ この一覧はサイトをビルドした時点のものです（保存直後の記事は、自動デプロイが終わると載ります）
     </p>
     <p class="filename" data-edit-hint hidden>
-      「GitHubで編集」は、GitHub トークンを設定しているときだけ表示します。<a href={url('/admin/')}>記事を書く</a>で設定してください。
+      「管理画面で修正」「GitHubで編集」は、GitHub トークンを設定しているときだけ表示します。<a href={url('/admin/')}>記事を書く</a>で設定してください。
     </p>
   </div>
 
@@ -82,6 +82,9 @@ const KINDS: Kind[] = ['feel', 'learn', 'tech'];
           </div>
           <div class="links">
             {r.siteHref && <a href={r.siteHref}>サイトで見る</a>}
+            <a href={r.adminEditHref} data-edit-link hidden>
+              管理画面で修正
+            </a>
             <a href={r.editHref} target="_blank" rel="noopener" data-edit-link hidden>
               GitHubで編集
             </a>
@@ -96,7 +99,7 @@ const KINDS: Kind[] = ['feel', 'learn', 'tech'];
 <script>
   import { getToken } from '../../lib/admin-client';
 
-  // 「GitHubで編集」はトークンを設定しているときだけ出す（設定していなければ案内を出す）
+  // 「管理画面で修正」「GitHubで編集」はトークンを設定しているときだけ出す（設定していなければ案内を出す）
   // 戻るボタンでキャッシュから表示されたときも、今のトークンの有無に合わせる
   const showEditLinks = () => {
     const hasToken = Boolean(getToken());
