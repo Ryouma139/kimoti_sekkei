@@ -1,0 +1,150 @@
+---
+// 管理画面の「カテゴリ」：まなびログのカテゴリの追加と、色の変更。
+// 保存すると src/data/categories.json を GitHub にコミットする。サイトとまなびログのフォームには、自動デプロイのあとに反映される。
+import AdminShell from '../../components/AdminShell.astro';
+import list from '../../data/categories.json';
+import { getAllForAdmin } from '../../lib/data';
+
+// カテゴリごとの記事数（下書きも含む・ビルド時点）
+const counts: Record<string, number> = {};
+for (const e of (await getAllForAdmin()).learn) counts[e.data.category] = (counts[e.data.category] ?? 0) + 1;
+---
+
+<AdminShell
+  title="カテゴリ"
+  eyebrow="ADMIN ／ CATEGORIES"
+  color="var(--learn)"
+  lead="まなびログのカテゴリと、グラフで使う色を管理します。保存すると数分後に、サイトとまなびログのフォームに反映されます。"
+  section="categories"
+>
+  <form class="panel admin-form" id="category-form" data-initial={JSON.stringify(list)} data-counts={JSON.stringify(counts)} novalidate>
+    <h2>今のカテゴリ</h2>
+    <ul class="category-rows" data-rows></ul>
+    <p class="filename" data-source>ビルド時点の内容です。GitHub トークンを設定していると、GitHub の最新の内容を読み込みます。</p>
+
+    <h2>カテゴリを追加</h2>
+    <div class="field-row">
+      <label class="field">
+        <span>名前（20文字まで）</span>
+        <input name="newName" maxlength="20" placeholder="例：Docker" />
+      </label>
+      <label class="field">
+        <span>色</span>
+        <input name="newColor" type="color" value="#8B5CF6" />
+      </label>
+    </div>
+    <small class="filename">色の変更だけなら、名前は空のままで「保存して公開」を押してください。</small>
+
+    <div class="actions">
+      <button type="submit" class="primary">保存して公開</button>
+      <p class="status-msg" data-status role="status" aria-live="polite"></p>
+    </div>
+  </form>
+</AdminShell>
+
+<script>
+  import { getFile, getToken, putFile } from '../../lib/admin-client';
+
+  type Item = { name: string; color: string };
+  const PATH = 'src/data/categories.json';
+
+  const form = document.getElementById('category-form') as HTMLFormElement;
+  const rows = form.querySelector<HTMLElement>('[data-rows]')!;
+  const source = form.querySelector<HTMLElement>('[data-source]')!;
+  const status = form.querySelector<HTMLElement>('[data-status]')!;
+  const button = form.querySelector<HTMLButtonElement>('button[type="submit"]')!;
+  const counts: Record<string, number> = JSON.parse(form.dataset.counts ?? '{}');
+
+  let list: Item[] = JSON.parse(form.dataset.initial ?? '[]');
+  // GitHub から読み込んだ版。保存のときに GitHub 側と比べ、ほかで変更されていたら上書きしない
+  let sha: string | null = null;
+  // 読み込めなかった理由（保存ボタンを押したときにも出す）
+  let loadError = '';
+
+  const setStatus = (message: string, kind: 'ok' | 'error' | '' = '') => {
+    status.textContent = message;
+    status.className = `status-msg ${kind}`;
+  };
+
+  // 今のカテゴリを1行ずつ（名前・色・記事数）
+  const render = () => {
+    rows.replaceChildren(
+      ...list.map((item, i) => {
+        const li = document.createElement('li');
+        const color = Object.assign(document.createElement('input'), { type: 'color', value: item.color.toLowerCase(), title: `${item.name} の色` });
+        color.dataset.index = String(i);
+        const code = Object.assign(document.createElement('code'), { textContent: item.color.toUpperCase() });
+        color.addEventListener('input', () => (code.textContent = color.value.toUpperCase()));
+        li.append(
+          color,
+          Object.assign(document.createElement('b'), { textContent: item.name }),
+          code,
+          Object.assign(document.createElement('small'), { textContent: `記事 ${counts[item.name] ?? 0}件` }),
+        );
+        return li;
+      }),
+    );
+  };
+
+  const load = async () => {
+    const token = getToken();
+    if (!token) return;
+    try {
+      const file = await getFile(token, PATH);
+      if (!file) throw new Error(`${PATH} がまだ GitHub にありません。カテゴリ画面を追加した変更を commit・push してから使ってください。`);
+      list = JSON.parse(file.text);
+      sha = file.sha;
+      source.textContent = 'GitHub の最新の内容を表示しています。';
+      render();
+    } catch (e) {
+      loadError = e instanceof TypeError ? '通信に失敗しました。ネットワークを確認してください。' : e instanceof Error ? e.message : '読み込みに失敗しました。';
+      setStatus(loadError, 'error');
+    }
+  };
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const token = getToken();
+    if (!token) return setStatus('GitHub トークンが設定されていません。「記事を書く」で設定してください。', 'error');
+    if (!sha) return setStatus(loadError || 'GitHub の最新の内容を読み込めていません。ページを読み込み直してください。', 'error');
+
+    // 色の変更を反映した一覧
+    const next: Item[] = list.map((item, i) => {
+      const input = rows.querySelector<HTMLInputElement>(`input[data-index="${i}"]`);
+      return { name: item.name, color: (input?.value ?? item.color).toUpperCase() };
+    });
+    const changedColors = next.filter((item, i) => item.color !== list[i].color.toUpperCase()).map((item) => item.name);
+
+    const name = (form.elements.namedItem('newName') as HTMLInputElement).value.trim();
+    const newColor = (form.elements.namedItem('newColor') as HTMLInputElement).value.toUpperCase();
+    if (name) {
+      if (name.length > 20) return setStatus('名前は20文字までです。', 'error');
+      if (next.some((item) => item.name.toLowerCase() === name.toLowerCase())) return setStatus(`「${name}」はすでにあります。`, 'error');
+      next.push({ name, color: newColor });
+    }
+    if (!name && changedColors.length === 0) return setStatus('追加するカテゴリの名前を入れるか、色を変更してください。', 'error');
+
+    const message = name ? `カテゴリ: 「${name}」を追加${changedColors.length ? `・色を変更（${changedColors.join('、')}）` : ''}` : `カテゴリ: 色を変更（${changedColors.join('、')}）`;
+
+    button.disabled = true;
+    setStatus('保存しています…');
+    try {
+      const latest = await getFile(token, PATH);
+      if (!latest || latest.sha !== sha) throw new Error('読み込んだあとに GitHub 上でカテゴリが変更されています。ページを読み込み直してください。');
+      const result = await putFile(token, PATH, `${JSON.stringify(next, null, 2)}\n`, message, sha);
+      list = next;
+      sha = result.sha ?? null;
+      (form.elements.namedItem('newName') as HTMLInputElement).value = '';
+      render();
+      setStatus('保存しました。数分後にサイトとまなびログのフォームに反映されます。', 'ok');
+      if (!sha) await load();
+    } catch (e) {
+      setStatus(e instanceof TypeError ? '通信に失敗しました。ネットワークを確認してください。' : e instanceof Error ? e.message : '保存に失敗しました。', 'error');
+    } finally {
+      button.disabled = false;
+    }
+  });
+
+  render();
+  void load();
+</script>

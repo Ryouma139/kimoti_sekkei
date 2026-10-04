@@ -93,7 +93,7 @@ const contentsApi = (path: string) => `https://api.github.com/repos/${REPO}/cont
 const authHeaders = (token: string) => ({ Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json' });
 
 /** 今 GitHub にあるファイル。なければ null */
-async function getFile(token: string, path: string): Promise<{ sha: string; text: string } | null> {
+export async function getFile(token: string, path: string): Promise<{ sha: string; text: string } | null> {
   const res = await fetch(`${contentsApi(path)}?ref=${BRANCH}`, { headers: authHeaders(token), cache: 'no-store' });
   if (res.status === 404) return null;
   if (res.status === 401) throw new Error('トークンが正しくないか、期限切れです。管理画面で設定し直してください。');
@@ -122,7 +122,7 @@ export async function fileExists(path: string): Promise<boolean | null> {
 }
 
 /** ファイルをコミットする。sha を渡すと既存ファイルの上書き（修正）、渡さなければ新規作成 */
-async function putFile(token: string, path: string, content: string, message: string, sha?: string): Promise<{ commitUrl?: string; sha?: string }> {
+export async function putFile(token: string, path: string, content: string, message: string, sha?: string): Promise<{ commitUrl?: string; sha?: string }> {
   const res = await fetch(contentsApi(path), {
     method: 'PUT',
     headers: authHeaders(token),

@@ -1,15 +1,16 @@
 ---
-// 管理画面の切り替え（記事を書く／保存記事一覧）
+// 管理画面の切り替え（記事を書く／保存記事一覧／カテゴリ）
 import { url } from '../lib/url';
 
 interface Props {
-  current: 'write' | 'posts';
+  current: 'write' | 'posts' | 'categories';
 }
 
 const { current } = Astro.props;
 const ITEMS = [
   { key: 'write', href: '/admin/', label: '記事を書く' },
   { key: 'posts', href: '/admin/posts/', label: '保存記事一覧' },
+  { key: 'categories', href: '/admin/categories/', label: 'カテゴリ' },
 ] as const;
 ---
 

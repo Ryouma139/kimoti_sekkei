@@ -1,0 +1,78 @@
+---
+// まなびログの全体：すべての期間の合計スタディタイムと、月ごとのスタディタイム（カテゴリ別の内訳つき）。
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import CategoryBars from '../../components/CategoryBars.astro';
+import { getLearn, minutesByDay, minutesByMonth } from '../../lib/data';
+import { dotted, formatMinutes, todayJST, ymd } from '../../lib/dates';
+import { CATEGORIES, CATEGORY_KEYS } from '../../lib/categories';
+import { url } from '../../lib/url';
+
+const learn = await getLearn();
+const total = learn.reduce((s, e) => s + e.data.minutes, 0);
+const studyDays = Object.keys(minutesByDay(learn)).length;
+// 記録は新しい順なので、末尾がいちばん古い
+const first = learn.at(-1);
+const last = learn[0];
+const months = minutesByMonth(learn, todayJST().slice(0, 7));
+const maxMonth = Math.max(1, ...months.map((m) => m.total));
+
+// 全期間のカテゴリ別合計
+const allByCategory: Record<string, number> = {};
+for (const m of months) for (const [c, v] of Object.entries(m.byCategory)) allByCategory[c] = (allByCategory[c] ?? 0) + v;
+
+const monthLabel = (month: string) => `${month.slice(0, 4)}年${Number(month.slice(5, 7))}月`;
+---
+
+<BaseLayout title="スタディタイムの全体" current="learn">
+  <section class="view">
+    <a class="back" href={url('/learn/')}>← まなびログ</a>
+    <div class="head">
+      <span class="eyebrow" style="color:var(--learn)">LEARN ／ 全体</span>
+      <h1>これまでのスタディタイム <span class="num">{formatMinutes(total)}</span></h1>
+      {
+        first && last ? (
+          <p>
+            {dotted(ymd(first.data.date))} 〜 {dotted(ymd(last.data.date))} ・ 記録 {learn.length}件 ・ 学習した日 {studyDays}日
+          </p>
+        ) : (
+          <p>まだ記録がありません。</p>
+        )
+      }
+    </div>
+
+    {
+      months.length > 0 && (
+        <div class="grid2">
+          <div class="panel">
+            <h2>月ごとのスタディタイム</h2>
+            <ul class="month-list">
+              {months.map((m) => (
+                <li class:list={{ 'is-empty': m.total === 0 }}>
+                  <span class="month-name">{monthLabel(m.month)}</span>
+                  <span class="month-bar" title={CATEGORY_KEYS.filter((c) => m.byCategory[c]).map((c) => `${c} ${formatMinutes(m.byCategory[c])}`).join(' / ')}>
+                    {CATEGORY_KEYS.map((c) =>
+                      m.byCategory[c] ? <i style={`width:${(m.byCategory[c] / maxMonth) * 100}%;background:${CATEGORIES[c]}`} /> : null,
+                    )}
+                  </span>
+                  <b class="num">{m.total === 0 ? '—' : formatMinutes(m.total)}</b>
+                  <small>{m.count}件</small>
+                </li>
+              ))}
+            </ul>
+            <p class="legend">
+              {CATEGORY_KEYS.map((c) => (
+                <span>
+                  <span class="swatch" style={`background:${CATEGORIES[c]}`} /> {c}
+                </span>
+              ))}
+            </p>
+          </div>
+          <div class="panel">
+            <h2>カテゴリ別・全期間</h2>
+            <CategoryBars totals={allByCategory} />
+          </div>
+        </div>
+      )
+    }
+  </section>
+</BaseLayout>

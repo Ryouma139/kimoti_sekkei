@@ -1419,3 +1419,97 @@ th {
 .profile-links a {
   font-weight: 700;
 }
+
+/* まなびログ：全体ページへのリンクと、月ごとのスタディタイム（/learn/summary/） */
+.more-link {
+  align-self: flex-start;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--learn);
+}
+.month-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  list-style: none;
+  margin: 0 0 14px;
+  padding: 0;
+}
+.month-list li {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr) 92px 40px;
+  gap: 10px;
+  align-items: center;
+  font-size: 13px;
+}
+.month-list li.is-empty {
+  color: var(--muted);
+}
+.month-name {
+  font-weight: 700;
+}
+.month-bar {
+  display: flex;
+  height: 12px;
+  border-radius: 6px;
+  background: var(--chip);
+  overflow: hidden;
+}
+.month-bar i {
+  display: block;
+  height: 100%;
+}
+.month-list b {
+  text-align: right;
+}
+.month-list small {
+  color: var(--muted);
+  text-align: right;
+}
+@media (max-width: 480px) {
+  .month-list li {
+    grid-template-columns: 80px minmax(0, 1fr) 84px;
+  }
+  .month-list small {
+    display: none;
+  }
+}
+
+/* 管理画面：カテゴリ（/admin/categories/） */
+.admin-form h2 {
+  font-size: 16px;
+}
+.category-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.category-rows li {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto auto;
+  gap: 12px;
+  align-items: center;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+}
+.category-rows code {
+  font: 12px var(--f-mono);
+  color: var(--muted);
+}
+.category-rows small {
+  color: var(--muted);
+  font-size: 12px;
+}
+.admin input[type='color'] {
+  width: 44px;
+  height: 32px;
+  padding: 2px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  cursor: pointer;
+}

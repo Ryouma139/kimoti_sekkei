@@ -67,6 +67,28 @@ export function minutesByCategory(learn: LearnEntry[], month: string): Record<st
   return map;
 }
 
+/** 月ごとの学習時間。いちばん古い記録の月〜 until（"2026-10"）の月までを、記録のない月も 0 で入れて新しい順に返す */
+export function minutesByMonth(learn: LearnEntry[], until: string) {
+  const map = new Map<string, { total: number; count: number; byCategory: Record<string, number> }>();
+  for (const e of learn) {
+    const month = ymd(e.data.date).slice(0, 7);
+    const m = map.get(month) ?? { total: 0, count: 0, byCategory: {} };
+    m.total += e.data.minutes;
+    m.count += 1;
+    m.byCategory[e.data.category] = (m.byCategory[e.data.category] ?? 0) + e.data.minutes;
+    map.set(month, m);
+  }
+  if (map.size === 0) return [];
+  const months = [...map.keys()].sort();
+  const last = months[months.length - 1] > until ? months[months.length - 1] : until;
+  const result: { month: string; total: number; count: number; byCategory: Record<string, number> }[] = [];
+  for (let [y, m] = months[0].split('-').map(Number); `${y}-${String(m).padStart(2, '0')}` <= last; m === 12 ? ((y += 1), (m = 1)) : (m += 1)) {
+    const month = `${y}-${String(m).padStart(2, '0')}`;
+    result.push({ month, ...(map.get(month) ?? { total: 0, count: 0, byCategory: {} }) });
+  }
+  return result.reverse();
+}
+
 /** 連続学習日数。今日まだ記録がなければ昨日から数える。 */
 export function studyStreak(byDay: Record<string, number>, today: string): number {
   let day = byDay[today] ? today : addDays(today, -1);

@@ -27,7 +27,7 @@ tags: []
 title: 
 date: ${today}
 minutes: 30
-category: TypeScript # src/lib/categories.ts のどれか
+category: TypeScript # src/data/categories.json のどれか（管理画面の「カテゴリ」で追加できる）
 # project: kimochi-code
 tags: []
 # source: https://
