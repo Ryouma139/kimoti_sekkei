@@ -2,6 +2,21 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import MoodBlob from '../components/MoodBlob.astro';
 import { MOODS, MOOD_KEYS } from '../lib/moods';
+import { url } from '../lib/url';
+
+// 3種類の記録の説明。押すとそれぞれの一覧ページへ移動する
+const SECTIONS = [
+  { href: '/feel/', kind: 'feel', title: 'きもち日記', text: '1日1件。その日の気分を5段階のアイコンで選び、出来事を書きます。技術の話は書きません。' },
+  { href: '/tech/', kind: 'tech', title: 'テックノート', text: '個人プロジェクトの進捗と、技術的な判断の理由（考え方メモ）をまとめます。' },
+  { href: '/learn/', kind: 'learn', title: 'まなびログ', text: '学んだことを1件ずつ、かかった時間（分）とカテゴリつきで記録します。' },
+];
+
+// プロフィールのリンク（外部サイトは新しいタブで開く）
+const PROFILE_LINKS = [
+  { label: '運営ブログサイト', href: 'https://product-chi-rust.vercel.app/' },
+  { label: 'X', href: 'https://x.com/home' },
+  { label: 'GitHub', href: 'https://github.com/Ryouma139/' },
+];
 ---
 
 <BaseLayout title="このサイトについて" current="about">
@@ -13,18 +28,15 @@ import { MOODS, MOOD_KEYS } from '../lib/moods';
     </div>
 
     <div class="grid2">
-      <div class="panel" style="background:var(--feel-soft);border:0">
-        <h2>きもち日記</h2>
-        <p>1日1件。その日の気分を5段階のアイコンで選び、出来事を書きます。技術の話は書きません。</p>
-      </div>
-      <div class="panel" style="background:var(--tech-soft);border:0">
-        <h2>テックノート</h2>
-        <p>個人プロジェクトの進捗と、技術的な判断の理由（考え方メモ）をまとめます。</p>
-      </div>
-      <div class="panel" style="background:var(--learn-soft);border:0">
-        <h2>まなびログ</h2>
-        <p>学んだことを1件ずつ、かかった時間（分）とカテゴリつきで記録します。</p>
-      </div>
+      {
+        SECTIONS.map((s) => (
+          <a class="panel about-link" href={url(s.href)} style={`background:var(--${s.kind}-soft);border:0;--c:var(--${s.kind})`}>
+            <h2>{s.title}</h2>
+            <p>{s.text}</p>
+            <span class="about-more">{s.title}を見る →</span>
+          </a>
+        ))
+      }
     </div>
 
     <div class="panel">
@@ -41,9 +53,27 @@ import { MOODS, MOOD_KEYS } from '../lib/moods';
       </div>
     </div>
 
-    <div class="panel">
+    <div class="panel profile">
       <h2>プロフィール</h2>
-      <p>ここに自己紹介、学習中の技術、SNSやGitHubへのリンクを書きます。（src/pages/about.astro を編集してください）</p>
+      <dl class="profile-list">
+        <dt>名前</dt>
+        <dd>R</dd>
+        <dt>趣味</dt>
+        <dd>サイト開発者。基本的に設計をメインに、クラウドで作っています。</dd>
+        <dt>職業</dt>
+        <dd>ソフトウェアエンジニア</dd>
+      </dl>
+      <ul class="profile-links">
+        {
+          PROFILE_LINKS.map((l) => (
+            <li>
+              <a href={l.href} target="_blank" rel="noopener">
+                {l.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
     </div>
 
     <p class="empty-note" style="font-size:13px">
