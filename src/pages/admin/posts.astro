@@ -2,6 +2,7 @@
 // 管理画面の「保存記事一覧」：下書きも含めて、src/content にある記事（Markdown）を全部出す。
 // 一覧はビルド時点のもの。管理画面で保存した直後の記事は、自動デプロイが終わると載る。
 import AdminShell from '../../components/AdminShell.astro';
+import AdminTodayCheck from '../../components/AdminTodayCheck.astro';
 import { getAllForAdmin, KIND_LABEL } from '../../lib/data';
 import { BRANCH, REPO } from '../../lib/admin-client';
 import { dotted, ymd } from '../../lib/dates';
@@ -43,6 +44,7 @@ const KINDS: Kind[] = ['feel', 'learn', 'tech'];
   section="posts"
   tokenWarning={false}
 >
+  <AdminTodayCheck />
   <div class="post-filters">
     <div class="pill-tabs" role="group" aria-label="種類で絞り込む" data-filter-group="kind">
       <button type="button" data-value="" aria-pressed="true">すべて（{rows.length}）</button>

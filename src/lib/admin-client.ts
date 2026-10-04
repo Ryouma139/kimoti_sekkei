@@ -102,6 +102,23 @@ async function getFile(token: string, path: string): Promise<{ sha: string; text
   return { sha: json.sha, text: fromBase64(json.content ?? '') };
 }
 
+/**
+ * GitHub にファイルがあるか。リポジトリは公開なのでトークンなしでも確認できる（あれば使う）。
+ * 確認できなかったとき（通信エラー・回数制限など）は null
+ */
+export async function fileExists(path: string): Promise<boolean | null> {
+  try {
+    const token = getToken();
+    const headers = token ? authHeaders(token) : { Accept: 'application/vnd.github+json' };
+    const res = await fetch(`${contentsApi(path)}?ref=${BRANCH}`, { headers, cache: 'no-store' });
+    if (res.ok) return true;
+    if (res.status === 404) return false;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 /** ファイルをコミットする。sha を渡すと既存ファイルの上書き（修正）、渡さなければ新規作成 */
 async function putFile(token: string, path: string, content: string, message: string, sha?: string): Promise<{ commitUrl?: string; sha?: string }> {
   const res = await fetch(contentsApi(path), {

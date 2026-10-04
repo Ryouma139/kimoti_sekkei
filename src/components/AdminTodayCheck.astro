@@ -1,0 +1,53 @@
+---
+// 管理画面で、今日のきもち日記（src/content/feel/<今日>.md）がまだなければポップアップで知らせ、書く画面へ案内する。
+// 「今日」は開いた時点のブラウザの日付（日本時間）。ビルド時点の一覧（下書きも含む）になければ、GitHub に直接確認する。
+import { getAllForAdmin } from '../lib/data';
+import { ymd } from '../lib/dates';
+import { url } from '../lib/url';
+
+const knownDays = (await getAllForAdmin()).feel.map((e) => ymd(e.data.date)).join(',');
+---
+
+<dialog class="today-dialog" data-today-dialog data-known-days={knownDays} data-write-href={url('/admin/feel/')}>
+  <p class="eyebrow" style="color:var(--feel)">TODAY</p>
+  <p class="today-dialog-msg">本日の気持ちが入力されていません。</p>
+  <p class="today-dialog-sub">きもち日記を書く画面に移動します。</p>
+  <div class="actions">
+    <button type="button" class="primary" data-today-write>書く</button>
+    <button type="button" class="secondary" data-today-later>あとで</button>
+  </div>
+</dialog>
+
+<script>
+  import { fileExists } from '../lib/admin-client';
+  import { todayJST } from '../lib/dates';
+
+  const DISMISS_KEY = 'kimochi-admin-today-later';
+  const dialog = document.querySelector<HTMLDialogElement>('[data-today-dialog]');
+
+  async function check() {
+    if (!dialog) return;
+    const today = todayJST();
+    // 「あとで」を押した日は、タブを閉じるまで出さない
+    try {
+      if (sessionStorage.getItem(DISMISS_KEY) === today) return;
+    } catch {}
+    const known = new Set((dialog.dataset.knownDays ?? '').split(',').filter(Boolean));
+    if (known.has(today)) return;
+    // ビルドのあとに保存した日記もあるので GitHub で確認。確認できなかったときは出さない（誤って出さないため）
+    if ((await fileExists(`src/content/feel/${today}.md`)) !== false) return;
+    dialog.showModal();
+  }
+
+  dialog?.querySelector('[data-today-write]')?.addEventListener('click', () => {
+    location.href = dialog.dataset.writeHref ?? '/admin/feel/';
+  });
+  dialog?.querySelector('[data-today-later]')?.addEventListener('click', () => {
+    try {
+      sessionStorage.setItem(DISMISS_KEY, todayJST());
+    } catch {}
+    dialog.close();
+  });
+
+  void check();
+</script>

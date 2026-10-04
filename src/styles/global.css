@@ -1345,3 +1345,25 @@ th {
   background: var(--chip);
   cursor: not-allowed;
 }
+
+/* 管理画面：今日のきもち日記がないときのポップアップ */
+.today-dialog {
+  width: min(420px, calc(100% - 32px));
+  border: 2px solid var(--feel);
+  border-radius: var(--r-lg);
+  padding: 24px;
+  background: var(--surface);
+  color: var(--fg);
+}
+.today-dialog::backdrop {
+  background: rgb(0 0 0 / 0.45);
+}
+.today-dialog-msg {
+  font-family: var(--f-display);
+  font-size: 20px;
+  margin: 6px 0 4px;
+}
+.today-dialog-sub {
+  color: var(--muted);
+  margin-bottom: 18px;
+}
