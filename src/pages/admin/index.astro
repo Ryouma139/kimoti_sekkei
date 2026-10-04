@@ -2,7 +2,6 @@
 // 管理画面のトップ（記事を書く）：GitHub トークンの設定と、各記事フォームへの入口。
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import AdminNav from '../../components/AdminNav.astro';
-import AdminTodayCheck from '../../components/AdminTodayCheck.astro';
 import { getFeel, getLearn, getTech } from '../../lib/data';
 import { REPO, BRANCH } from '../../lib/admin-client';
 import { dotted, ymd } from '../../lib/dates';
@@ -21,7 +20,6 @@ const MENU = [
 <BaseLayout title="管理画面" noindex admin>
   <section class="view admin">
     <AdminNav current="write" />
-    <AdminTodayCheck />
     <div class="head">
       <span class="eyebrow" style="color:var(--accent)">ADMIN ／ 管理画面</span>
       <h1>記事を書く</h1>

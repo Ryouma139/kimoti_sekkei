@@ -107,13 +107,15 @@ async function getFile(token: string, path: string): Promise<{ sha: string; text
  * 確認できなかったとき（通信エラー・回数制限など）は null
  */
 export async function fileExists(path: string): Promise<boolean | null> {
+  const check = async (headers: Record<string, string>) => {
+    const res = await fetch(`${contentsApi(path)}?ref=${BRANCH}`, { headers, cache: 'no-store' });
+    return res.ok ? true : res.status === 404 ? false : null;
+  };
   try {
     const token = getToken();
-    const headers = token ? authHeaders(token) : { Accept: 'application/vnd.github+json' };
-    const res = await fetch(`${contentsApi(path)}?ref=${BRANCH}`, { headers, cache: 'no-store' });
-    if (res.ok) return true;
-    if (res.status === 404) return false;
-    return null;
+    const result = token ? await check(authHeaders(token)) : null;
+    // トークンなし、またはトークンが正しくない・期限切れで確認できなかったときは、トークンなしで確かめ直す
+    return result ?? (await check({ Accept: 'application/vnd.github+json' }));
   } catch {
     return null;
   }

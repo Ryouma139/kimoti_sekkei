@@ -3,6 +3,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import MoodBlob from '../components/MoodBlob.astro';
 import MoodCalendar from '../components/MoodCalendar.astro';
 import FeedRow from '../components/FeedRow.astro';
+import TodayFeelCheck from '../components/TodayFeelCheck.astro';
 import { feelItem, getFeel, getLearn, getTech, itemsByDay, learnItem, minutesByDay, moodByDay, studyStreak, techItem, type FeedItem } from '../lib/data';
 import { dotted, todayJST, weekday, ymd } from '../lib/dates';
 import { MOODS } from '../lib/moods';
@@ -32,6 +33,7 @@ const feed: FeedItem[] = [
 ---
 
 <BaseLayout current="home">
+  <TodayFeelCheck />
   <section class="view">
     <div class="hero">
       {
