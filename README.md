@@ -143,17 +143,16 @@ src/
 scripts/new.mjs            # 記事のひな形を作るスクリプト
 ```
 
-集計（カレンダー、グラフ、連続学習日数）はすべて**ビルド時**に行います。「今日」はビルドした日（日本時間）なので、毎日更新されるように見せたい場合は、毎日ビルドが走るように設定してください（Cloudflare Pages の Deploy Hook を GitHub Actions の schedule から呼ぶ、など）。
+集計（カレンダー、グラフ、連続学習日数）はすべて**ビルド時**に行います。「今日」はビルドした日（日本時間）なので、毎日 0:00（日本時間）に自動でビルドし直す設定にしてあります（`.github/workflows/deploy.yml` の `schedule`）。
 
 ## 公開
 
-**Cloudflare Pages（おすすめ）**
+GitHub Pages で公開しています：**https://ryouma139.github.io/kimoti_sekkei/**（管理画面は `/kimoti_sekkei/admin/`）
 
-1. Cloudflare のダッシュボードで「Workers & Pages」→「Pages」→ このリポジトリを接続
-2. フレームワークのプリセットで「Astro」を選ぶ（ビルドコマンド `npm run build`、出力先 `dist`）
-3. 公開URLが決まったら `astro.config.mjs` の `site` を書き換える
-
-**GitHub Pages の場合**は `astro.config.mjs` に `base: '/kimoti_sekkei'` を追加し、[Astro公式のGitHub Pagesガイド](https://docs.astro.build/ja/guides/deploy/github/)のワークフローを使ってください。リンクは `src/lib/url.ts` で base に対応しています。
+- `main` に push すると `.github/workflows/deploy.yml` が動き、1〜2分で公開されます（管理画面からの保存も同じ）。
+- 「今日」やカレンダーはビルドした日で決まるので、毎日 0:00（日本時間）にも自動で作り直します。GitHub の Actions タブから手動でも実行できます。
+- サイトは `/kimoti_sekkei/` の下に置かれるため、`astro.config.mjs` に `base: '/kimoti_sekkei'` を指定しています。ページ内のリンクは必ず `src/lib/url.ts` の `url()` を通してください（`/feel/` と直接書くと公開後にリンク切れになります）。
+- 初回だけ、GitHub の Settings → Pages → Build and deployment の Source を **GitHub Actions** にしてください。
 
 ## 素材とライセンス
 

@@ -1,0 +1,42 @@
+# GitHub Pages に公開する（Astro 公式ガイドの形）。
+# 事前に GitHub の Settings → Pages → Source を「GitHub Actions」にしておく。
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  # GitHub の Actions タブから手動でも実行できる
+  workflow_dispatch:
+  # 「今日」やカレンダーはビルドした日で決まるので、毎日 0:00（日本時間）に作り直す
+  schedule:
+    - cron: '0 15 * * *'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 公開が重なったときは、あとから始まったものを待たせる
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Install, build, and upload
+        uses: withastro/action@v6
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
