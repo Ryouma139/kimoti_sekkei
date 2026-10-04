@@ -1,43 +1,96 @@
 ---
+import FeedRow from './FeedRow.astro';
 import MoodBlob from './MoodBlob.astro';
+import type { FeedItem } from '../lib/data';
 import { MOODS, MOOD_KEYS, type Mood } from '../lib/moods';
-import { addDays, monthDay, WEEKDAY_LABELS, weekdayIndex } from '../lib/dates';
+import { daysInMonth, monthDay, toYmd, weekday, WEEKDAY_LABELS, weekdayIndex } from '../lib/dates';
 
 interface Props {
   moods: Record<string, Mood>;
   minutes: Record<string, number>;
-  /** 最後の日（今日） */
-  end: string;
-  days?: number;
+  /** 今日。枠線を付け、未来の日を薄くするのに使う */
+  today: string;
+  /** 表示する年。省略すると今日の年。今年なら今月、それ以外は1月を最初に表示する */
+  year?: number;
+  /** 日付ごとの記録。日付をクリックすると下に一覧で出す */
+  items: Record<string, FeedItem[]>;
 }
 
-const { moods, minutes, end, days = 35 } = Astro.props;
-const start = addDays(end, -(days - 1));
-const blanks = weekdayIndex(start);
-const cells: string[] = [];
-for (let d = start; d <= end; d = addDays(d, 1)) cells.push(d);
+const { moods, minutes, today, items } = Astro.props;
+const year = Astro.props.year ?? Number(today.slice(0, 4));
+const currentMonth = year === Number(today.slice(0, 4)) ? Number(today.slice(5, 7)) : 1;
+
+// 1〜12月それぞれの日付リストと、1日の前に入れる空マスの数
+const months = Array.from({ length: 12 }, (_, i) => {
+  const month = i + 1;
+  const days = Array.from({ length: daysInMonth(year, month) }, (_, d) => toYmd(year, month, d + 1));
+  return { month, days, blanks: weekdayIndex(days[0]) };
+});
+// この年の記録がある日だけ、一覧を先に作っておく
+const daysWithItems = Object.keys(items)
+  .filter((d) => d.startsWith(`${year}-`))
+  .sort();
 // バーが満タンになる学習時間（分）
 const FULL = 150;
 ---
 
-<div class="cal">
-  {WEEKDAY_LABELS.map((w) => <div class="wd">{w}</div>)}
-  {Array.from({ length: blanks }, () => <div class="day empty" />)}
+<div class="mood-cal">
+  <div class="cal-nav">
+    <button type="button" data-step="-1" aria-label="前の月" disabled={currentMonth === 1}>‹</button>
+    <span class="cal-label" aria-live="polite">{year}年{currentMonth}月</span>
+    <button type="button" data-step="1" aria-label="次の月" disabled={currentMonth === 12}>›</button>
+  </div>
   {
-    cells.map((d) => {
-      const min = minutes[d] ?? 0;
-      const label = `${monthDay(d)} ${moods[d] ? MOODS[moods[d]].label : '記録なし'}・学習${min}分`;
-      return (
-        <div class:list={['day', { 'is-today': d === end }]} title={label}>
-          <span class="num">{Number(d.slice(8, 10))}</span>
-          <MoodBlob mood={moods[d]} />
-          <span class="bar">
-            <i style={`width:${Math.min(100, (min / FULL) * 100)}%`} />
-          </span>
+    months.map(({ month, days, blanks }) => (
+      <div class="cal-month" data-month={month} data-label={`${year}年${month}月`} hidden={month !== currentMonth}>
+        <div class="cal">
+          {WEEKDAY_LABELS.map((w) => (
+            <div class="wd">{w}</div>
+          ))}
+          {Array.from({ length: blanks }, () => (
+            <div class="day empty" />
+          ))}
+          {days.map((d) => {
+            const min = minutes[d] ?? 0;
+            const label = `${monthDay(d)} ${moods[d] ? MOODS[moods[d]].label : '記録なし'}・学習${min}分`;
+            return (
+              <button
+                type="button"
+                class:list={['day', { 'is-today': d === today, 'is-future': d > today, 'has-items': Boolean(items[d]) }]}
+                data-day={d}
+                aria-pressed="false"
+                title={label}
+              >
+                <span class="num">{Number(d.slice(8, 10))}</span>
+                <MoodBlob mood={moods[d]} />
+                <span class="bar">
+                  <i style={`width:${Math.min(100, (min / FULL) * 100)}%`} />
+                </span>
+              </button>
+            );
+          })}
         </div>
-      );
-    })
+      </div>
+    ))
   }
+  <div class="day-detail">
+    <p class="empty-note" data-day-hint>日付をクリックすると、その日の記録が表示されます。</p>
+    <p class="empty-note" data-day-none hidden>この日の記録はありません。</p>
+    {
+      daysWithItems.map((d) => (
+        <div class="day-list" data-day={d} hidden>
+          <h3>
+            {monthDay(d)}（{weekday(d)}）の記録
+          </h3>
+          <div class="feed">
+            {items[d].map((item) => (
+              <FeedRow item={item} />
+            ))}
+          </div>
+        </div>
+      ))
+    }
+  </div>
 </div>
 <div class="legend">
   {
@@ -50,3 +103,45 @@ const FULL = 150;
   }
   <span><span class="legend-bar"></span>学習時間</span>
 </div>
+
+<script>
+  document.querySelectorAll<HTMLElement>('.mood-cal').forEach((root) => {
+    const months = Array.from(root.querySelectorAll<HTMLElement>('.cal-month'));
+    const label = root.querySelector('.cal-label');
+    const prev = root.querySelector<HTMLButtonElement>('[data-step="-1"]');
+    const next = root.querySelector<HTMLButtonElement>('[data-step="1"]');
+    let index = months.findIndex((m) => !m.hidden);
+
+    const show = (i: number) => {
+      index = Math.min(Math.max(i, 0), months.length - 1);
+      months.forEach((m, j) => (m.hidden = j !== index));
+      if (label) label.textContent = months[index].dataset.label ?? '';
+      if (prev) prev.disabled = index === 0;
+      if (next) next.disabled = index === months.length - 1;
+    };
+
+    root.querySelectorAll<HTMLButtonElement>('.cal-nav button').forEach((button) => {
+      button.addEventListener('click', () => show(index + Number(button.dataset.step)));
+    });
+
+    // 日付をクリック → その日の記録一覧を出す
+    const dayButtons = root.querySelectorAll<HTMLButtonElement>('button.day');
+    const lists = root.querySelectorAll<HTMLElement>('.day-list');
+    const hint = root.querySelector<HTMLElement>('[data-day-hint]');
+    const none = root.querySelector<HTMLElement>('[data-day-none]');
+
+    dayButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        const day = button.dataset.day;
+        dayButtons.forEach((b) => b.setAttribute('aria-pressed', String(b === button)));
+        let found = false;
+        lists.forEach((list) => {
+          list.hidden = list.dataset.day !== day;
+          if (!list.hidden) found = true;
+        });
+        if (hint) hint.hidden = true;
+        if (none) none.hidden = found;
+      });
+    });
+  });
+</script>

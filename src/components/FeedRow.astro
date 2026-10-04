@@ -1,0 +1,31 @@
+---
+import MoodBlob from './MoodBlob.astro';
+import { KIND_LABEL, type FeedItem } from '../lib/data';
+import { monthDay, ymd } from '../lib/dates';
+import { url } from '../lib/url';
+
+interface Props {
+  item: FeedItem;
+}
+
+const { item } = Astro.props;
+---
+
+<a class="row" href={url(item.href)}>
+  {
+    item.mood ? (
+      <MoodBlob mood={item.mood} size="44px" />
+    ) : (
+      <span class="ico" style={`background:var(--${item.kind})`}>
+        {item.icon}
+      </span>
+    )
+  }
+  <div>
+    <div class="t">{item.title}</div>
+    <div class="m">
+      {monthDay(ymd(item.date))} ・ {item.meta}
+    </div>
+  </div>
+  <span class:list={['kind', item.kind]}>{KIND_LABEL[item.kind]}</span>
+</a>

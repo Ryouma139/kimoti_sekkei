@@ -1,0 +1,49 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import MoodCalendar from '../../components/MoodCalendar.astro';
+import { calendarYears, getFeel, getLearn, getTech, itemsByDay, minutesByDay, moodByDay } from '../../lib/data';
+import { formatMinutes, todayJST } from '../../lib/dates';
+import { url } from '../../lib/url';
+
+// いちばん古い記事の年〜今年（未来の日付の記事があればその年）まで、1年ごとにページを作る（/calendar/2026/ など）
+export async function getStaticPaths() {
+  const [feel, tech, learn] = await Promise.all([getFeel(), getTech(), getLearn()]);
+  const years = calendarYears(feel, tech, learn, Number(todayJST().slice(0, 4)));
+  return years.map((year) => ({ params: { year: String(year) }, props: { year, years } }));
+}
+
+interface Props {
+  year: number;
+  years: number[];
+}
+
+const { year, years } = Astro.props;
+const [feel, tech, learn] = await Promise.all([getFeel(), getTech(), getLearn()]);
+const today = todayJST();
+const byDay = minutesByDay(learn);
+const inYear = (d: Date) => d.getUTCFullYear() === year;
+const feelCount = feel.filter((e) => inYear(e.data.date)).length;
+const yearMinutes = learn.filter((e) => inYear(e.data.date)).reduce((s, e) => s + e.data.minutes, 0);
+---
+
+<BaseLayout title={`${year}年のカレンダー`} current="calendar">
+  <section class="view">
+    <div class="head">
+      <span class="eyebrow" style="color:var(--m-meh)">CALENDAR ／ カレンダー</span>
+      <h1>{year}年のカレンダー</h1>
+      <p>きもち日記 {feelCount}件 ・ スタディタイム {formatMinutes(yearMinutes)}</p>
+    </div>
+    <nav class="year-tabs" aria-label="年を選ぶ">
+      {
+        years.map((y) => (
+          <a href={url(`/calendar/${y}/`)} aria-current={y === year ? 'page' : undefined}>
+            {y}年
+          </a>
+        ))
+      }
+    </nav>
+    <div class="panel">
+      <MoodCalendar moods={moodByDay(feel)} minutes={byDay} today={today} year={year} items={itemsByDay(feel, tech, learn)} />
+    </div>
+  </section>
+</BaseLayout>

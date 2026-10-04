@@ -68,9 +68,72 @@ export function projectMinutes(learn: LearnEntry[], projectId: string): number {
   return learn.filter((e) => e.data.project === projectId).reduce((sum, e) => sum + e.data.minutes, 0);
 }
 
+/** カレンダーに出す年の一覧。いちばん古い記事の年〜（いちばん新しい記事の年と今年の、遅いほう） */
+export function calendarYears(feel: FeelEntry[], tech: TechEntry[], learn: LearnEntry[], thisYear: number): number[] {
+  const years = [...feel, ...tech, ...learn].map((e) => Number(ymd(e.data.date).slice(0, 4)));
+  const from = Math.min(thisYear, ...years);
+  const to = Math.max(thisYear, ...years);
+  return Array.from({ length: to - from + 1 }, (_, i) => from + i);
+}
+
 /** 3種類の記事のタグをまとめる */
 export function allTags(feel: FeelEntry[], tech: TechEntry[], learn: LearnEntry[]): string[] {
   const set = new Set<string>();
   for (const e of [...feel, ...tech, ...learn]) e.data.tags.forEach((t) => set.add(t));
   return [...set].sort((a, b) => a.localeCompare(b, 'ja'));
+}
+
+/** ホームの一覧（最近の記録・カレンダーの日別）で使う、3種類共通の1行分 */
+export type FeedItem = {
+  kind: 'feel' | 'tech' | 'learn';
+  date: Date;
+  title: string;
+  meta: string;
+  href: string;
+  icon: string;
+  mood?: Mood;
+};
+
+export const KIND_LABEL = { feel: 'きもち', tech: 'テック', learn: 'まなび' } as const;
+
+export const feelItem = (e: FeelEntry): FeedItem => ({
+  kind: 'feel',
+  date: e.data.date,
+  title: e.data.title,
+  meta: 'きもち日記',
+  href: `/feel/${e.id}/`,
+  icon: '',
+  mood: e.data.mood,
+});
+
+export const learnItem = (e: LearnEntry): FeedItem => ({
+  kind: 'learn',
+  date: e.data.date,
+  title: e.data.title,
+  meta: e.data.category,
+  href: `/learn/#${e.id}`,
+  icon: `${e.data.minutes}m`,
+});
+
+/** date を省略すると更新日（なければ作成日） */
+export const techItem = (e: TechEntry, date: Date = e.data.updated ?? e.data.date): FeedItem => ({
+  kind: 'tech',
+  date,
+  title: e.data.title,
+  meta: e.data.type === 'project' ? `プロジェクト・進捗 ${e.data.progress ?? 0}%` : '考え方メモ',
+  href: `/tech/${e.id}/`,
+  icon: e.data.icon ?? e.data.title.slice(0, 2),
+});
+
+/** 日付ごとの記録（"2026-10-01" → その日の feel / learn / tech）。tech は作成日と更新日の両方に入れる */
+export function itemsByDay(feel: FeelEntry[], tech: TechEntry[], learn: LearnEntry[]): Record<string, FeedItem[]> {
+  const map: Record<string, FeedItem[]> = {};
+  const add = (item: FeedItem) => (map[ymd(item.date)] ??= []).push(item);
+  feel.forEach((e) => add(feelItem(e)));
+  learn.forEach((e) => add(learnItem(e)));
+  for (const e of tech) {
+    add(techItem(e, e.data.date));
+    if (e.data.updated && ymd(e.data.updated) !== ymd(e.data.date)) add(techItem(e, e.data.updated));
+  }
+  return map;
 }

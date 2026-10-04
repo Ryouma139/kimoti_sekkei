@@ -1,0 +1,7 @@
+---
+import { todayJST } from '../../lib/dates';
+import { url } from '../../lib/url';
+
+// /calendar/ は今年のカレンダー（/calendar/2026/ など）へ移動する
+return Astro.redirect(url(`/calendar/${todayJST().slice(0, 4)}/`));
+---

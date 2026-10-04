@@ -18,6 +18,13 @@ export const weekdayIndex = (day: string): number => new Date(`${day}T00:00:00Z`
 export const weekday = (day: string): string => WEEKDAYS[weekdayIndex(day)];
 export const WEEKDAY_LABELS = WEEKDAYS;
 
+/** その月の日数（2026, 9 → 30）。うるう年の2月も29になる */
+export const daysInMonth = (year: number, month: number): number => new Date(Date.UTC(year, month, 0)).getUTCDate();
+
+/** (2026, 9, 5) → "2026-09-05" */
+export const toYmd = (year: number, month: number, day: number): string =>
+  `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
 /** "2026-10-02" → "10/2" */
 export const monthDay = (day: string): string => `${Number(day.slice(5, 7))}/${Number(day.slice(8, 10))}`;
 

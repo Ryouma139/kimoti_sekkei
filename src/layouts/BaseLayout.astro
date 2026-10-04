@@ -1,9 +1,10 @@
 ---
 import '../styles/global.css';
 import MoodBlob from '../components/MoodBlob.astro';
+import { todayJST } from '../lib/dates';
 import { url } from '../lib/url';
 
-type Section = 'home' | 'feel' | 'tech' | 'learn' | 'about';
+type Section = 'home' | 'calendar' | 'feel' | 'tech' | 'learn' | 'about';
 
 interface Props {
   title?: string;
@@ -17,6 +18,7 @@ const pageTitle = title ? `${title} | ${SITE}` : SITE;
 
 const NAV: { key: Section; href: string; label: string; color: string }[] = [
   { key: 'home', href: '/', label: 'ホーム', color: 'var(--fg)' },
+  { key: 'calendar', href: `/calendar/${todayJST().slice(0, 4)}/`, label: 'カレンダー', color: 'var(--m-meh)' },
   { key: 'feel', href: '/feel/', label: 'きもち日記', color: 'var(--feel)' },
   { key: 'tech', href: '/tech/', label: 'テックノート', color: 'var(--tech)' },
   { key: 'learn', href: '/learn/', label: 'まなびログ', color: 'var(--learn)' },
