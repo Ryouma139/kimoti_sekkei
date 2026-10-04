@@ -1,0 +1,24 @@
+---
+// 管理画面の切り替え（記事を書く／保存記事一覧）
+import { url } from '../lib/url';
+
+interface Props {
+  current: 'write' | 'posts';
+}
+
+const { current } = Astro.props;
+const ITEMS = [
+  { key: 'write', href: '/admin/', label: '記事を書く' },
+  { key: 'posts', href: '/admin/posts/', label: '保存記事一覧' },
+] as const;
+---
+
+<nav class="pill-tabs admin-nav" aria-label="管理画面">
+  {
+    ITEMS.map((item) => (
+      <a href={url(item.href)} aria-current={item.key === current ? 'page' : undefined}>
+        {item.label}
+      </a>
+    ))
+  }
+</nav>

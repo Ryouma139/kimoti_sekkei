@@ -409,12 +409,16 @@ button.day:hover {
 button.day[aria-pressed='true'] {
   box-shadow: inset 0 0 0 2px var(--feel);
 }
-.year-tabs {
+.year-tabs,
+.pill-tabs {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
-.year-tabs a {
+.year-tabs a,
+.pill-tabs a,
+.pill-tabs button {
+  cursor: pointer;
   border: 1px solid var(--line);
   background: var(--surface);
   color: var(--fg);
@@ -423,10 +427,14 @@ button.day[aria-pressed='true'] {
   font: 700 13px var(--f-body);
   text-decoration: none;
 }
-.year-tabs a:hover {
+.year-tabs a:hover,
+.pill-tabs a:hover,
+.pill-tabs button:hover {
   background: var(--chip);
 }
-.year-tabs a[aria-current='page'] {
+.year-tabs a[aria-current='page'],
+.pill-tabs a[aria-current='page'],
+.pill-tabs button[aria-pressed='true'] {
   background: var(--fg);
   color: var(--bg);
   border-color: var(--fg);
@@ -1258,4 +1266,67 @@ th {
 }
 .admin-card:hover {
   transform: translateY(-2px);
+}
+
+/* 管理画面：保存記事一覧（/admin/posts/） */
+.post-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.post-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.post-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px 14px;
+  align-items: center;
+  padding: 14px 16px;
+  border-radius: var(--r-md);
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+.post-item .t {
+  font-weight: 700;
+}
+.post-item .m {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.post-item .m code {
+  font: 12px var(--f-mono);
+  overflow-wrap: anywhere;
+}
+.post-item .links {
+  display: flex;
+  gap: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.post-item.is-draft {
+  border-style: dashed;
+}
+.draft-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--muted);
+  color: var(--muted);
+}
+@media (max-width: 560px) {
+  .post-item {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }

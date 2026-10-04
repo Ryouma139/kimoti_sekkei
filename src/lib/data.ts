@@ -22,6 +22,12 @@ export const getFeel = async () => (await getCollection('feel', (e) => !e.data.d
 export const getTech = async () => (await getCollection('tech', (e) => !e.data.draft)).sort(byDateDesc);
 export const getLearn = async () => (await getCollection('learn', (e) => !e.data.draft)).sort(byDateDesc);
 
+/** 管理画面の「保存記事一覧」用：下書きも含めた全記事（新しい順）。サイトの表示には使わない */
+export const getAllForAdmin = async () => {
+  const [feel, tech, learn] = await Promise.all([getCollection('feel'), getCollection('tech'), getCollection('learn')]);
+  return { feel: feel.sort(byDateDesc), tech: tech.sort(byDateDesc), learn: learn.sort(byDateDesc) };
+};
+
 /** 日付ごとの気分（同じ日に複数あれば、あとに書いたほう） */
 export function moodByDay(feel: FeelEntry[]): Record<string, Mood> {
   const map: Record<string, Mood> = {};

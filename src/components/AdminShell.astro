@@ -1,6 +1,7 @@
 ---
-// 管理画面の各フォームページの枠（戻るリンク・見出し・トークン未設定の警告）
+// 管理画面の各ページの枠（切り替えメニュー・見出し・トークン未設定の警告）
 import BaseLayout from '../layouts/BaseLayout.astro';
+import AdminNav from './AdminNav.astro';
 import { url } from '../lib/url';
 
 interface Props {
@@ -9,22 +10,30 @@ interface Props {
   /** 見出しの色（例: var(--feel)） */
   color: string;
   lead: string;
+  /** 切り替えメニューで選択中にする項目 */
+  section?: 'write' | 'posts';
+  /** トークン未設定の警告を出すか（保存するページだけ） */
+  tokenWarning?: boolean;
 }
 
-const { title, eyebrow, color, lead } = Astro.props;
+const { title, eyebrow, color, lead, section = 'write', tokenWarning = true } = Astro.props;
 ---
 
 <BaseLayout title={`${title} | 管理画面`} noindex admin>
   <section class="view admin">
-    <a class="back" href={url('/admin/')}>← 管理画面</a>
+    <AdminNav current={section} />
     <div class="head">
       <span class="eyebrow" style={`color:${color}`}>{eyebrow}</span>
       <h1>{title}</h1>
       <p>{lead}</p>
     </div>
-    <p class="panel token-warning" data-token-warning hidden>
-      GitHub トークンが設定されていないため、保存できません。<a href={url('/admin/')}>管理画面のトップ</a>で設定してください。
-    </p>
+    {
+      tokenWarning && (
+        <p class="panel token-warning" data-token-warning hidden>
+          GitHub トークンが設定されていないため、保存できません。<a href={url('/admin/')}>管理画面のトップ</a>で設定してください。
+        </p>
+      )
+    }
     <slot />
   </section>
 </BaseLayout>
