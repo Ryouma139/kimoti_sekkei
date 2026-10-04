@@ -63,7 +63,10 @@ const NAV: { key: Section; href: string; label: string; color: string }[] = [
             ))
           }
         </nav>
-        <p class="side-note">気分・技術・学びを分けて記録しています。</p>
+        <div class="side-note">
+          <p>気分・技術・学びを分けて記録しています。</p>
+          <a class="side-admin" href={url('/admin/')}>→ 管理画面はこちら</a>
+        </div>
       </aside>
       <main>
         <slot />

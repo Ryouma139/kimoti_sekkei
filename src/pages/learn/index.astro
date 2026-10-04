@@ -24,6 +24,7 @@ const items = await Promise.all(learn.map(async (entry) => ({ entry, Content: (a
       <h1>今週のスタディタイム <span class="num">{formatMinutes(weekTotal)}</span></h1>
       <p>学んだことを1件ずつ、かかった時間と一緒に記録しています。時間はカテゴリ別に集計され、ホームのカレンダーにも反映されます。</p>
       <a class="more-link" href={url('/learn/summary/')}>全体を確認する（月ごと・全期間の合計） →</a>
+      <a class="write-link" href={url('/admin/learn/')} style="--c:var(--learn)">＋ まなびログを書く</a>
     </div>
     <div class="grid2">
       <div class="panel">

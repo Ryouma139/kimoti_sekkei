@@ -164,6 +164,15 @@ img {
   font-size: 12px;
   color: var(--muted);
 }
+.side-admin {
+  display: inline-block;
+  margin-top: 8px;
+  font-weight: 700;
+  color: var(--muted);
+}
+.side-admin:hover {
+  color: var(--fg);
+}
 main {
   padding-block: 32px 64px;
   padding-inline: clamp(16px, 4vw, 48px);
@@ -1455,6 +1464,21 @@ th {
   font-size: 14px;
   font-weight: 700;
   color: var(--learn);
+}
+/* きもち日記・まなびログ・テックノートの一覧：管理画面の書くフォームへのボタン（--c に各色） */
+.write-link {
+  align-self: flex-start;
+  font: 700 14px var(--f-body);
+  color: var(--c);
+  border: 1.5px solid var(--c);
+  border-radius: 999px;
+  padding: 8px 18px;
+  text-decoration: none;
+}
+.write-link:hover,
+.write-link:focus-visible {
+  color: #fff;
+  background: var(--c);
 }
 .month-list {
   display: flex;

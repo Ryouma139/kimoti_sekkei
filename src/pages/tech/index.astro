@@ -19,6 +19,7 @@ const notes = tech.filter((e) => e.data.type === 'note');
       <span class="eyebrow" style="color:var(--tech)">BUILD ／ テックノート</span>
       <h1>考えたこと、つくっているもの</h1>
       <p>技術的な判断の理由と、個人プロジェクトの進捗をまとめる場所です。日々の学習メモはまなびログに書きます。</p>
+      <a class="write-link" href={url('/admin/tech/')} style="--c:var(--tech)">＋ テックノートを書く</a>
     </div>
     <div class="subtabs" role="group" aria-label="表示切替">
       <button type="button" data-tab="projects" aria-pressed="true">プロジェクト（{projects.length}）</button>

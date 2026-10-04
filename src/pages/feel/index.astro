@@ -4,6 +4,7 @@ import FeelCard from '../../components/FeelCard.astro';
 import MoodBlob from '../../components/MoodBlob.astro';
 import { getFeel } from '../../lib/data';
 import { MOODS, MOOD_KEYS } from '../../lib/moods';
+import { url } from '../../lib/url';
 
 const feel = await getFeel();
 ---
@@ -14,6 +15,7 @@ const feel = await getFeel();
       <span class="eyebrow" style="color:var(--feel)">FEEL ／ きもち日記</span>
       <h1>その日の気分が、カードの色になる</h1>
       <p>技術の話は書かない場所です。うれしかったこと、しんどかったことを気分アイコンと一緒に残します。</p>
+      <a class="write-link" href={url('/admin/feel/')} style="--c:var(--feel)">＋ きもち日記を書く</a>
     </div>
     <div class="filters" role="group" aria-label="気分で絞り込む">
       <button type="button" class="all" data-filter="" aria-pressed="true">すべて</button>
