@@ -7,13 +7,23 @@ export const REPO = 'Ryouma139/kimoti_sekkei';
 export const BRANCH = 'main';
 const TOKEN_KEY = 'kimochi-admin-token';
 
-/** 「このブラウザに保存する」なら localStorage、それ以外はタブを閉じるまでの sessionStorage */
+/**
+ * 「このブラウザに保存する」なら localStorage、それ以外は sessionStorage。
+ * sessionStorage のほうは、タブを閉じるか管理画面の外のページを開くと消える（forgetSessionToken）。
+ */
 export function getToken(): string {
   try {
     return localStorage.getItem(TOKEN_KEY) ?? sessionStorage.getItem(TOKEN_KEY) ?? '';
   } catch {
     return '';
   }
+}
+
+/** 管理画面の外に出たときに呼ぶ。保存しないを選んだトークン（sessionStorage）を消す */
+export function forgetSessionToken(): void {
+  try {
+    sessionStorage.removeItem(TOKEN_KEY);
+  } catch {}
 }
 
 export function isTokenRemembered(): boolean {
@@ -146,7 +156,12 @@ export function setupAdminForm(spec: AdminFormSpec): void {
     }
   };
 
-  if (tokenWarning) tokenWarning.hidden = Boolean(getToken());
+  const showTokenWarning = () => {
+    if (tokenWarning) tokenWarning.hidden = Boolean(getToken());
+  };
+  showTokenWarning();
+  // 戻るボタンでキャッシュから表示されたときも、今のトークンの有無に合わせる
+  window.addEventListener('pageshow', showTokenWarning);
   setToday();
   refresh();
   form.addEventListener('input', refresh);

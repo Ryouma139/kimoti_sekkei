@@ -16,7 +16,7 @@ const MENU = [
 ];
 ---
 
-<BaseLayout title="管理画面" noindex>
+<BaseLayout title="管理画面" noindex admin>
   <section class="view admin">
     <div class="head">
       <span class="eyebrow" style="color:var(--accent)">ADMIN ／ 管理画面</span>
@@ -47,7 +47,7 @@ const MENU = [
       </p>
       <form id="token-form">
         <input id="token" type="password" autocomplete="off" placeholder="github_pat_..." />
-        <label class="check"><input id="remember" type="checkbox" /> このブラウザに保存する（オフならタブを閉じるまで）</label>
+        <label class="check"><input id="remember" type="checkbox" /> このブラウザに保存する（オフなら、管理画面の外に出るかタブを閉じると消える）</label>
         <div class="actions">
           <button type="submit" class="primary">設定する</button>
           <button type="button" class="secondary" id="token-clear">消す</button>
@@ -68,13 +68,18 @@ const MENU = [
 
   const show = () => {
     const set = Boolean(getToken());
-    status.textContent = set ? `設定済み（${isTokenRemembered() ? 'このブラウザに保存' : 'タブを閉じるまで'}）` : '未設定';
+    status.textContent = set ? `設定済み（${isTokenRemembered() ? 'このブラウザに保存' : '管理画面にいる間だけ'}）` : '未設定';
     status.className = `status-msg ${set ? 'ok' : 'error'}`;
   };
 
-  input.value = getToken();
-  remember.checked = isTokenRemembered();
-  show();
+  // 戻るボタンでキャッシュから表示されたときも、今の状態に合わせる（管理画面の外でトークンが消えている場合がある）
+  const load = () => {
+    input.value = getToken();
+    remember.checked = isTokenRemembered();
+    show();
+  };
+  load();
+  window.addEventListener('pageshow', load);
 
   form.addEventListener('submit', (event) => {
     event.preventDefault();

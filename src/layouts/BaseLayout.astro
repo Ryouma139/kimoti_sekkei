@@ -12,10 +12,12 @@ interface Props {
   current?: Section;
   /** 検索エンジンに載せない（管理画面など） */
   noindex?: boolean;
+  /** 管理画面のページ。これ以外のページを開くと、保存しないを選んだトークンを消す */
+  admin?: boolean;
 }
 
 const SITE = 'きもちとコード';
-const { title, description = 'きもちと学びを記録する、エンジニアの日記。', current, noindex } = Astro.props;
+const { title, description = 'きもちと学びを記録する、エンジニアの日記。', current, noindex, admin } = Astro.props;
 const pageTitle = title ? `${title} | ${SITE}` : SITE;
 
 const NAV: { key: Section; href: string; label: string; color: string }[] = [
@@ -44,7 +46,7 @@ const NAV: { key: Section; href: string; label: string; color: string }[] = [
       href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap"
     />
   </head>
-  <body>
+  <body data-admin={admin ? '' : undefined}>
     <div class="app">
       <aside class="side">
         <a class="brand" href={url('/')}>
@@ -69,3 +71,10 @@ const NAV: { key: Section; href: string; label: string; color: string }[] = [
     </div>
   </body>
 </html>
+
+<script>
+  import { forgetSessionToken } from '../lib/admin-client';
+
+  // 管理画面の外のページを開いたら、トークン（「このブラウザに保存する」をオフにしたもの）を消す
+  if (!document.body.hasAttribute('data-admin')) forgetSessionToken();
+</script>

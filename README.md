@@ -110,7 +110,7 @@ tags: []
 1. GitHub の Settings → Developer settings → Personal access tokens → **Fine-grained tokens** → Generate new token
 2. Repository access で **このリポジトリだけ** を選ぶ
 3. Permissions の **Contents** を **Read and write** にする（ほかは不要）。有効期限も付けておく
-4. できたトークンを `/admin/` の「GitHub トークン」欄に貼って「設定する」（「このブラウザに保存する」をオンにすると次回から入力不要。オフならタブを閉じるまで有効）
+4. できたトークンを `/admin/` の「GitHub トークン」欄に貼って「設定する」（「このブラウザに保存する」をオンにすると次回から入力不要。オフなら管理画面にいる間だけ有効で、ホームなど管理画面の外のページを開くかタブを閉じると自動で消える）
 
 **注意**
 

@@ -14,7 +14,7 @@ interface Props {
 const { title, eyebrow, color, lead } = Astro.props;
 ---
 
-<BaseLayout title={`${title} | 管理画面`} noindex>
+<BaseLayout title={`${title} | 管理画面`} noindex admin>
   <section class="view admin">
     <a class="back" href={url('/admin/')}>← 管理画面</a>
     <div class="head">
