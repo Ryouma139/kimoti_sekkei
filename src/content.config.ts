@@ -9,6 +9,8 @@ const feel = defineCollection({
   schema: z.object({
     title: z.string(),
     date: z.coerce.date(),
+    // 書いた日時。管理画面で保存すると自動で入る。同じ日付の記事の並び順に使う
+    created: z.coerce.date().optional(),
     mood: z.enum(MOOD_KEYS),
     weather: z.string().optional(),
     tags: z.array(z.string()).default([]),
@@ -23,6 +25,8 @@ const tech = defineCollection({
     type: z.enum(['project', 'note']),
     title: z.string(),
     date: z.coerce.date(),
+    // 書いた日時。管理画面で保存すると自動で入る。同じ日付の記事の並び順に使う
+    created: z.coerce.date().optional(),
     updated: z.coerce.date().optional(),
     summary: z.string().optional(),
     // project のみ
@@ -42,6 +46,8 @@ const learn = defineCollection({
   schema: z.object({
     title: z.string(),
     date: z.coerce.date(),
+    // 書いた日時。管理画面で保存すると自動で入る。同じ日付の記事の並び順に使う
+    created: z.coerce.date().optional(),
     minutes: z.number().int().positive(),
     category: z.enum(CATEGORY_KEYS),
     project: z.string().optional(), // tech のファイル名（拡張子なし）

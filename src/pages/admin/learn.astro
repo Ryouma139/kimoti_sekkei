@@ -13,7 +13,7 @@ const projects = (await getTech()).filter((e) => e.data.type === 'project');
   title="まなびログを書く"
   eyebrow="ADMIN ／ LEARN"
   color="var(--learn)"
-  lead="学んだことを1件ずつ、かかった時間と一緒に残します。ファイル名は「日付-スラッグ」になります。"
+  lead="学んだことを1件ずつ、かかった時間と一緒に残します。ファイル名は「日付_スラッグ」になります。"
 >
   <form class="panel admin-form" id="admin-form" novalidate>
     <label class="field">
@@ -28,7 +28,7 @@ const projects = (await getTech()).filter((e) => e.data.type === 'project');
       </label>
       <label class="field">
         <span>スラッグ（英小文字・数字・ハイフン）</span>
-        <input name="slug" required placeholder="例：iam-policy" />
+        <input name="slug" required placeholder="例：iam-policy" autocapitalize="off" spellcheck="false" />
       </label>
     </div>
 
@@ -76,20 +76,21 @@ const projects = (await getTech()).filter((e) => e.data.type === 'project');
 </AdminShell>
 
 <script>
-  import { checked, isSlug, isUrl, setupAdminForm, splitList, toMarkdown, value, yamlString } from '../../lib/admin-client';
+  import { nowJST, articleFileName, checked, isSlug, isUrl, setupAdminForm, splitList, toMarkdown, value, yamlString } from '../../lib/admin-client';
 
   const form = document.getElementById('admin-form') as HTMLFormElement;
   const optional = (name: string, quote = true) => (value(form, name) ? (quote ? yamlString(value(form, name)) : value(form, name)) : undefined);
 
   setupAdminForm({
     form,
-    path: () => `src/content/learn/${value(form, 'date')}-${value(form, 'slug') || 'slug'}.md`,
+    path: () => `src/content/learn/${articleFileName(value(form, 'date'), value(form, 'slug'))}.md`,
     message: () => `まなびログ: ${value(form, 'date')} ${value(form, 'title')}`,
     markdown: () =>
       toMarkdown(
         [
           ['title', yamlString(value(form, 'title'))],
           ['date', value(form, 'date')],
+          ['created', yamlString(nowJST())],
           ['minutes', value(form, 'minutes')],
           ['category', yamlString(value(form, 'category'))],
           ['project', optional('project')],

@@ -6,14 +6,23 @@ export type FeelEntry = CollectionEntry<'feel'>;
 export type TechEntry = CollectionEntry<'tech'>;
 export type LearnEntry = CollectionEntry<'learn'>;
 
-const byDateDesc = (a: { data: { date: Date } }, b: { data: { date: Date } }) =>
-  b.data.date.getTime() - a.data.date.getTime();
+type Sortable = { id: string; data: { date: Date; created?: Date } };
+
+/**
+ * 新しい順。日付が同じなら書いた日時（created）が新しい順。
+ * created がない記事（手で書いたものなど）はその日の中でいちばん古い扱いにし、それ同士はファイル名の順にする。
+ * ファイル名まで比べるのは、手元と GitHub Actions でビルド結果がずれないようにするため。
+ */
+const byDateDesc = (a: Sortable, b: Sortable) =>
+  b.data.date.getTime() - a.data.date.getTime() ||
+  (b.data.created?.getTime() ?? 0) - (a.data.created?.getTime() ?? 0) ||
+  a.id.localeCompare(b.id);
 
 export const getFeel = async () => (await getCollection('feel', (e) => !e.data.draft)).sort(byDateDesc);
 export const getTech = async () => (await getCollection('tech', (e) => !e.data.draft)).sort(byDateDesc);
 export const getLearn = async () => (await getCollection('learn', (e) => !e.data.draft)).sort(byDateDesc);
 
-/** 日付ごとの気分（同じ日に複数あれば新しいほう） */
+/** 日付ごとの気分（同じ日に複数あれば、あとに書いたほう） */
 export function moodByDay(feel: FeelEntry[]): Record<string, Mood> {
   const map: Record<string, Mood> = {};
   for (const e of [...feel].reverse()) map[ymd(e.data.date)] = e.data.mood;
@@ -92,6 +101,8 @@ export type FeedItem = {
   href: string;
   icon: string;
   mood?: Mood;
+  /** 書いた日時（同じ日付の並び順に使う） */
+  created?: Date;
 };
 
 export const KIND_LABEL = { feel: 'きもち', tech: 'テック', learn: 'まなび' } as const;
@@ -104,6 +115,7 @@ export const feelItem = (e: FeelEntry): FeedItem => ({
   href: `/feel/${e.id}/`,
   icon: '',
   mood: e.data.mood,
+  created: e.data.created,
 });
 
 export const learnItem = (e: LearnEntry): FeedItem => ({
@@ -113,6 +125,7 @@ export const learnItem = (e: LearnEntry): FeedItem => ({
   meta: e.data.category,
   href: `/learn/#${e.id}`,
   icon: `${e.data.minutes}m`,
+  created: e.data.created,
 });
 
 /** date を省略すると更新日（なければ作成日） */
@@ -123,6 +136,7 @@ export const techItem = (e: TechEntry, date: Date = e.data.updated ?? e.data.dat
   meta: e.data.type === 'project' ? `プロジェクト・進捗 ${e.data.progress ?? 0}%` : '考え方メモ',
   href: `/tech/${e.id}/`,
   icon: e.data.icon ?? e.data.title.slice(0, 2),
+  created: e.data.created,
 });
 
 /** 日付ごとの記録（"2026-10-01" → その日の feel / learn / tech）。tech は作成日と更新日の両方に入れる */

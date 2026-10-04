@@ -15,14 +15,19 @@ const totalMinutes = learn.reduce((s, e) => s + e.data.minutes, 0);
 const latest = feel[0];
 const activeProjects = tech.filter((e) => e.data.type === 'project' && e.data.status === 'run').length;
 
-// 3種類の記録を新しい順に混ぜる（種類ごとに最大5件 → 上位5件）。同じ日なら feel を先に出す
+// 3種類の記録を新しい順に混ぜる（種類ごとに最大5件 → 上位5件）。同じ日なら feel を先に、その次は書いた日時が新しい順
 const FEED_SIZE = 5;
 const feed: FeedItem[] = [
   ...feel.slice(0, FEED_SIZE).map(feelItem),
   ...learn.slice(0, FEED_SIZE).map(learnItem),
   ...tech.slice(0, FEED_SIZE).map((e) => techItem(e)),
 ]
-  .sort((a, b) => b.date.getTime() - a.date.getTime() || Number(b.kind === 'feel') - Number(a.kind === 'feel'))
+  .sort(
+    (a, b) =>
+      b.date.getTime() - a.date.getTime() ||
+      Number(b.kind === 'feel') - Number(a.kind === 'feel') ||
+      (b.created?.getTime() ?? 0) - (a.created?.getTime() ?? 0),
+  )
   .slice(0, FEED_SIZE);
 ---
 

@@ -32,6 +32,9 @@ export function saveToken(token: string, remember: boolean): void {
   } catch {}
 }
 
+/** 今の日本時間（例: "2026-10-04T21:30:15+09:00"）。保存した日時として front matter の created に入れる */
+export const nowJST = (): string => `${new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 19)}+09:00`;
+
 /** front matter の文字列。JSON 形式で書くと YAML としても正しく、" や : が入っても壊れない */
 export const yamlString = (value: string): string => JSON.stringify(value);
 
@@ -42,8 +45,11 @@ export const splitList = (text: string): string[] =>
     .map((t) => t.trim())
     .filter(Boolean);
 
-/** ファイル名に使う英小文字・数字・ハイフン */
+/** スラッグ（記事の URL やファイル名に使う名前）は英小文字・数字・ハイフンだけ。例: iam-policy */
 export const isSlug = (text: string): boolean => /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(text);
+
+/** admin で作る learn / tech のファイル名（拡張子なし）："2026-10-04" と "iam-policy" → "2026-10-04_iam-policy" */
+export const articleFileName = (date: string, slug: string): string => `${date}_${slug || 'slug'}`;
 
 export const isUrl = (text: string): boolean => {
   try {
@@ -68,11 +74,12 @@ const toBase64 = (text: string): string => {
 
 /** 新しいファイルとしてコミットする。同じパスのファイルがあれば上書きせずエラーにする */
 async function createFile(token: string, path: string, content: string, message: string): Promise<string | undefined> {
-  const api = `https://api.github.com/repos/${REPO}/contents/${path}`;
+  // 日本語などを含むパスは1階層ずつ URL エンコードする
+  const api = `https://api.github.com/repos/${REPO}/contents/${path.split('/').map(encodeURIComponent).join('/')}`;
   const headers = { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json' };
 
   const exists = await fetch(`${api}?ref=${BRANCH}`, { headers, cache: 'no-store' });
-  if (exists.ok) throw new Error(`${path} はすでにあります。ファイル名（日付やスラッグ）を変えてください。`);
+  if (exists.ok) throw new Error(`同じファイル名の記事がすでにあります（${path}）。`);
   if (exists.status === 401) throw new Error('トークンが正しくないか、期限切れです。管理画面で設定し直してください。');
   if (exists.status !== 404) throw new Error(`確認に失敗しました（${exists.status}）。`);
 

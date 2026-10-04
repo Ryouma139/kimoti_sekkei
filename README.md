@@ -43,6 +43,8 @@ npm run new:tech -- my-app        # テックノート
 
 `title` が空のままだとビルドでエラーになるので、書き忘れに気づけます。
 
+**並び順**：記事は `date` の新しい順です。同じ日付の記事は、`created`（書いた日時。管理画面で保存すると `created: "2026-10-04T21:30:00+09:00"` のように自動で入る）が新しい順になります。`created` がない記事はその日の中でいちばん古い扱いで、それ同士はファイル名の順です。手で書くときも、同じ日に複数書くなら `created` を入れておくと順番を決められます。
+
 ### きもち日記 `src/content/feel/2026-10-02.md`
 
 ```yaml
@@ -95,9 +97,11 @@ tags: []
 | URL | 内容 | 保存先 |
 |---|---|---|
 | `/admin/` | トップ（トークン設定・各フォームへの入口・記事数） | — |
-| `/admin/feel/` | きもち日記 | `src/content/feel/<日付>.md` |
-| `/admin/learn/` | まなびログ | `src/content/learn/<日付>-<スラッグ>.md` |
-| `/admin/tech/` | テックノート（「プロジェクト」を選ぶと進捗などの欄が出る） | `src/content/tech/<スラッグ>.md` |
+| `/admin/feel/` | きもち日記（1日1件） | `src/content/feel/<日付>.md` |
+| `/admin/learn/` | まなびログ | `src/content/learn/<日付>_<スラッグ>.md` |
+| `/admin/tech/` | テックノート（「プロジェクト」を選ぶと進捗などの欄が出る） | `src/content/tech/<作成日>_<スラッグ>.md` |
+
+スラッグはタイトルとは別に入力する、記事の URL やファイル名に使う名前です（英小文字・数字・ハイフン。例：`iam-policy`）。ファイル名は `2026-10-04_iam-policy.md`、テックノートの URL は `/tech/2026-10-04_my-app/` のようになります。
 
 ファイル: `src/pages/admin/`（各ページ）、`src/components/AdminShell.astro`・`AdminSubmit.astro`（共通の枠と保存ボタン）、`src/lib/admin-client.ts`（トークン保存・GitHub への保存などブラウザ側の共通処理）
 

@@ -11,7 +11,7 @@ const NOTE_TEMPLATE = '## 背景\n\n## 決定\n\n## 理由\n';
   title="テックノートを書く"
   eyebrow="ADMIN ／ TECH"
   color="var(--tech)"
-  lead="プロジェクトの記録や、技術的な考え方のメモを残します。ファイル名は「スラッグ」になり、記事のURLにも使われます。"
+  lead="プロジェクトの記録や、技術的な考え方のメモを残します。ファイル名は「作成日_スラッグ」になり、記事のURLにも使われます。"
 >
   <form class="panel admin-form" id="admin-form" novalidate>
     <fieldset class="field">
@@ -29,7 +29,8 @@ const NOTE_TEMPLATE = '## 背景\n\n## 決定\n\n## 理由\n';
 
     <label class="field">
       <span>スラッグ（英小文字・数字・ハイフン）</span>
-      <input name="slug" required placeholder="例：markdown-over-cms" />
+      <input name="slug" required placeholder="例：markdown-over-cms" autocapitalize="off" spellcheck="false" />
+      <small>記事のURL（/tech/作成日_スラッグ/）と、まなびログの「関連プロジェクト」に使われます。あとから変えるとリンクが切れます。</small>
     </label>
 
     <div class="field-row">
@@ -94,7 +95,7 @@ const NOTE_TEMPLATE = '## 背景\n\n## 決定\n\n## 理由\n';
 </AdminShell>
 
 <script>
-  import { checked, isSlug, isUrl, setupAdminForm, splitList, toMarkdown, value, yamlString } from '../../lib/admin-client';
+  import { nowJST, articleFileName, checked, isSlug, isUrl, setupAdminForm, splitList, toMarkdown, value, yamlString } from '../../lib/admin-client';
 
   const form = document.getElementById('admin-form') as HTMLFormElement;
   const projectOnly = form.querySelector<HTMLElement>('[data-project-only]')!;
@@ -105,7 +106,7 @@ const NOTE_TEMPLATE = '## 背景\n\n## 決定\n\n## 理由\n';
   setupAdminForm({
     form,
     onChange: () => (projectOnly.hidden = !isProject()),
-    path: () => `src/content/tech/${value(form, 'slug') || 'slug'}.md`,
+    path: () => `src/content/tech/${articleFileName(value(form, 'date'), value(form, 'slug'))}.md`,
     message: () => `テックノート: ${value(form, 'title')}`,
     markdown: () =>
       toMarkdown(
@@ -113,6 +114,7 @@ const NOTE_TEMPLATE = '## 背景\n\n## 決定\n\n## 理由\n';
           ['type', isProject() ? 'project' : 'note'],
           ['title', yamlString(value(form, 'title'))],
           ['date', value(form, 'date')],
+          ['created', yamlString(nowJST())],
           ['updated', value(form, 'updated') || undefined],
           ['summary', optional('summary')],
           ['icon', project(optional('icon'))],

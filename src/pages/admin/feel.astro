@@ -1,13 +1,19 @@
 ---
 // きもち日記のフォーム。項目は src/content.config.ts の feel と同じ。
+// きもち日記は1日1件（カレンダーにその日の気分を1つ出すため）。ファイル名は日付だけ（2026-10-04.md）。
 import AdminShell from '../../components/AdminShell.astro';
 import AdminSubmit from '../../components/AdminSubmit.astro';
 import MoodBlob from '../../components/MoodBlob.astro';
 import { MOODS, MOOD_KEYS } from '../../lib/moods';
+import { getFeel } from '../../lib/data';
+import { ymd } from '../../lib/dates';
+
+// すでに日記がある日（ビルド時点）。ファイル名が日付だけでない古い記事も含めて、同じ日の2件目を防ぐ
+const usedDays = (await getFeel()).map((e) => ymd(e.data.date)).join(',');
 ---
 
-<AdminShell title="きもち日記を書く" eyebrow="ADMIN ／ FEEL" color="var(--feel)" lead="その日の気分と出来事を残します。ファイル名は日付になります（1日1件）。">
-  <form class="panel admin-form" id="admin-form" novalidate>
+<AdminShell title="きもち日記を書く" eyebrow="ADMIN ／ FEEL" color="var(--feel)" lead="その日の気分と出来事を残します。1日1件で、ファイル名は日付になります。">
+  <form class="panel admin-form" id="admin-form" data-used-days={usedDays} novalidate>
     <label class="field">
       <span>タイトル</span>
       <input name="title" required placeholder="例：初めてPRがマージされた" />
@@ -55,9 +61,10 @@ import { MOODS, MOOD_KEYS } from '../../lib/moods';
 </AdminShell>
 
 <script>
-  import { checked, setupAdminForm, splitList, toMarkdown, value, yamlString } from '../../lib/admin-client';
+  import { nowJST, checked, setupAdminForm, splitList, toMarkdown, value, yamlString } from '../../lib/admin-client';
 
   const form = document.getElementById('admin-form') as HTMLFormElement;
+  const usedDays = new Set((form.dataset.usedDays ?? '').split(',').filter(Boolean));
   const mood = () => form.querySelector<HTMLInputElement>('input[name="mood"]:checked')?.value ?? 'calm';
 
   setupAdminForm({
@@ -69,6 +76,7 @@ import { MOODS, MOOD_KEYS } from '../../lib/moods';
         [
           ['title', yamlString(value(form, 'title'))],
           ['date', value(form, 'date')],
+          ['created', yamlString(nowJST())],
           ['mood', mood()],
           ['weather', value(form, 'weather') ? yamlString(value(form, 'weather')) : undefined],
           ['tags', JSON.stringify(splitList(value(form, 'tags')))],
@@ -76,6 +84,10 @@ import { MOODS, MOOD_KEYS } from '../../lib/moods';
         ],
         value(form, 'body'),
       ),
-    validate: () => (!value(form, 'title') || !value(form, 'date') || !value(form, 'body') ? 'タイトル・日付・本文を入力してください。' : null),
+    validate: () => {
+      if (!value(form, 'title') || !value(form, 'date') || !value(form, 'body')) return 'タイトル・日付・本文を入力してください。';
+      if (usedDays.has(value(form, 'date'))) return `${value(form, 'date')} のきもち日記はすでにあります（1日1件）。直すときは GitHub かエディタで編集してください。`;
+      return null;
+    },
   });
 </script>
