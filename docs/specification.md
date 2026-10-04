@@ -384,6 +384,9 @@ gh auth setup-git                           # git が GitHub CLI のログイン
 - サイトは `/kimoti_sekkei/` の下に置かれます。**ページ内のリンクは必ず `url()` を通してください**（`/feel/` と直接書くと公開後にリンク切れ）。
 - 手元の開発サーバーも `http://localhost:4321/kimoti_sekkei/` で開きます（`/` だけだと 404）。
 - `build.yml` は確認用で、push のたびにビルドが2回走ります（問題はありません）。
+- **CSS は HTML に埋め込み**（`build.inlineStylesheets: 'always'`）、**ブラウザ用の JS はファイル名にハッシュを付けない**設定にしています（`astro.config.mjs` の `stable-client-file-names`）。
+  - 理由：GitHub Pages は HTML を10分キャッシュします。デプロイで CSS・JS のファイル名が変わると、ブラウザに残った古い HTML が消えたファイルを探して 404 になり、**デザインが外れて白い背景にリンクと巨大な顔アイコンだけ**の表示になっていたため。
+  - JS は名前が固定なので、デプロイ直後の10分ほどは「古い HTML ＋ 新しい JS」になることがあります。表示が崩れることはありませんが、動きがおかしいときは再読み込みしてください。
 
 ---
 
