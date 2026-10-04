@@ -1,6 +1,22 @@
 [
-  { "name": "TypeScript", "color": "#3B82F6" },
-  { "name": "AWS", "color": "#F59E0B" },
-  { "name": "アルゴリズム", "color": "#EC4899" },
-  { "name": "設計", "color": "#10B981" }
+  {
+    "name": "TypeScript",
+    "color": "#3B82F6"
+  },
+  {
+    "name": "AWS",
+    "color": "#F59E0B"
+  },
+  {
+    "name": "アルゴリズム",
+    "color": "#EC4899"
+  },
+  {
+    "name": "設計",
+    "color": "#10B981"
+  },
+  {
+    "name": "Docker",
+    "color": "#8B5CF6"
+  }
 ]
