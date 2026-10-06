@@ -18,5 +18,9 @@
   {
     "name": "Docker",
     "color": "#8B5CF6"
+  },
+  {
+    "name": "応用情報",
+    "color": "#F75F5F"
   }
 ]
