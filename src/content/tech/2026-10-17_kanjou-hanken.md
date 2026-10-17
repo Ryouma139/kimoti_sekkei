@@ -5,7 +5,7 @@ date: 2026-10-17
 created: "2026-10-17T15:19:44+09:00"
 summary: "鑑賞後の前と後での感情の変化とともに、共有するサイト"
 icon: "KJH"
-status: plan
+status: run
 progress: 0
 stack: ["Python","JavaScript","Django"]
 repo: "https://github.com/Ryouma139/Kanjou_Hanken"
