@@ -22,5 +22,9 @@
   {
     "name": "応用情報",
     "color": "#F75F5F"
+  },
+  {
+    "name": "Python",
+    "color": "#F4F75F"
   }
 ]
