@@ -3,11 +3,12 @@ type: project
 title: "SNS_Postingサイト"
 date: 2026-10-04
 created: "2026-10-04T16:07:13+09:00"
+updated: 2026-10-18
 summary: "SNS用のアフィリエイト自動投稿システムと分析ボードのアプリサイト"
 icon: "SNS"
 status: run
-progress: 50
-stack: ["TypeScript","Python","外部API","テスター","React","CloudFlare","KV","Cron","自動化"]
+progress: 70
+stack: ["TypeScript","Python","外部API","テスター","React","CloudFlare","KV","Cron","自動化","D1","R2"]
 repo: "https://github.com/Ryouma139/sns-posting"
 tags: ["TypeScript","React","API","CloudFlare"]
 ---
