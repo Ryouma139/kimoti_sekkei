@@ -66,7 +66,7 @@
 |---|---|
 | 症状 | 公開サイトで、時間がたつと白い背景にリンクと巨大な黒丸（顔アイコンの目）だけになる |
 | 原因 | デプロイのたびに CSS のファイル名（ハッシュ）が変わり古いものが消える。GitHub Pages は HTML を10分キャッシュするので、古い HTML が消えた CSS を探して 404 |
-| 対策 | `build.inlineStylesheets: 'always'`（CSS を HTML に埋め込む）。ブラウザ用 JS はファイル名にハッシュを付けない（`astro:build:setup` フックで client だけに設定。全体に設定するとビルドが壊れる） |
+| 対策 | `build.inlineStylesheets: 'always'`（CSS を HTML に埋め込む）。ブラウザ用 JS はファイル名にハッシュを付けない（`vite.environments.client` で client だけに設定。全体に設定するとビルドが壊れる。Astro 5 では `astro:build:setup` フックで設定していた） |
 
 **⑥ このサイトについて（#8）**
 - 3つのカードは「〇〇を見る →」付きのリンク（`/feel/`・`/tech/`・`/learn/`）。カードの説明は `SECTIONS` にまとめた。

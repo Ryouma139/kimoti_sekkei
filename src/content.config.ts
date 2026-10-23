@@ -1,4 +1,5 @@
-import { defineCollection, z } from 'astro:content';
+import { defineCollection } from 'astro:content';
+import { z } from 'astro/zod';
 import { glob } from 'astro/loaders';
 import { MOOD_KEYS } from './lib/moods';
 import { CATEGORY_KEYS } from './lib/categories';
@@ -34,7 +35,7 @@ const tech = defineCollection({
     status: z.enum(['plan', 'run', 'done']).optional(),
     progress: z.number().min(0).max(100).optional(),
     stack: z.array(z.string()).default([]),
-    repo: z.string().url().optional(),
+    repo: z.url().optional(),
     tags: z.array(z.string()).default([]),
     draft: z.boolean().default(false),
   }),
@@ -52,7 +53,7 @@ const learn = defineCollection({
     category: z.enum(CATEGORY_KEYS),
     project: z.string().optional(), // tech のファイル名（拡張子なし）
     tags: z.array(z.string()).default([]),
-    source: z.string().url().optional(),
+    source: z.url().optional(),
     draft: z.boolean().default(false),
   }),
 });
