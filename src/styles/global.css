@@ -810,6 +810,18 @@ button.day[aria-pressed='true'] {
 .col .v.on {
   color: var(--accent);
 }
+/* バーの上に出す気分の表情。いちばん高いバーの上でもはみ出さないよう上に余白をとる */
+.chart.has-mood {
+  padding-top: 28px;
+}
+.col .mood {
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  line-height: 0;
+}
 .xax {
   grid-column: 2;
   display: grid;

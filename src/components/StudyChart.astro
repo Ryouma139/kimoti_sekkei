@@ -1,14 +1,18 @@
 ---
+import MoodBlob from './MoodBlob.astro';
 import { CATEGORIES, type Category } from '../lib/categories';
 import { monthDay, weekday } from '../lib/dates';
+import type { Mood } from '../lib/moods';
 
 interface Props {
   days: { date: string; values: Record<string, number> }[];
   /** 強調する日（今日） */
   highlight?: string;
+  /** 日付ごとの気分。ある日はバーの上に表情を出す */
+  moods?: Record<string, Mood>;
 }
 
-const { days, highlight } = Astro.props;
+const { days, highlight, moods = {} } = Astro.props;
 const sums = days.map((d) => Object.values(d.values).reduce((a, b) => a + b, 0));
 const step = Math.max(...sums, 60) > 240 ? 120 : 60;
 const max = Math.max(step, Math.ceil(Math.max(...sums, 1) / step) * step);
@@ -16,7 +20,7 @@ const ticks = Array.from({ length: max / step + 1 }, (_, i) => i * step);
 const color = (c: string) => CATEGORIES[c as Category] ?? 'var(--muted)';
 ---
 
-<div class="chart" style={`--cols:${days.length}`}>
+<div class:list={['chart', { 'has-mood': days.some((d) => moods[d.date]) }]} style={`--cols:${days.length}`}>
   <div class="yax" aria-hidden="true">
     {ticks.map((t) => <span style={`bottom:${(t / max) * 100}%`}>{t}</span>)}
   </div>
@@ -31,6 +35,11 @@ const color = (c: string) => CATEGORIES[c as Category] ?? 'var(--muted)';
           {sums[i] > 0 && (
             <span class:list={['v', 'num', { on: d.date === highlight }]} style={`bottom:calc(${(sums[i] / max) * 100}% + 2px)`}>
               {sums[i]}
+            </span>
+          )}
+          {moods[d.date] && (
+            <span class="mood" style={`bottom:calc(${(sums[i] / max) * 100}% + ${sums[i] > 0 ? 20 : 4}px)`}>
+              <MoodBlob mood={moods[d.date]} size="22px" />
             </span>
           )}
         </div>

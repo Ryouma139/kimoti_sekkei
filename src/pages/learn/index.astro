@@ -4,12 +4,12 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import StudyChart from '../../components/StudyChart.astro';
 import CategoryBars from '../../components/CategoryBars.astro';
 import TagList from '../../components/TagList.astro';
-import { getLearn, minutesByCategory, minutesByDayCategory } from '../../lib/data';
+import { getFeel, getLearn, minutesByCategory, minutesByDayCategory, moodByDay } from '../../lib/data';
 import { addDays, dotted, formatMinutes, todayJST, ymd } from '../../lib/dates';
 import { CATEGORIES } from '../../lib/categories';
 import { url } from '../../lib/url';
 
-const learn = await getLearn();
+const [learn, feel] = await Promise.all([getLearn(), getFeel()]);
 const today = todayJST();
 const week = minutesByDayCategory(learn, addDays(today, -6), today);
 const weekTotal = week.reduce((s, d) => s + Object.values(d.values).reduce((a, b) => a + b, 0), 0);
@@ -29,7 +29,7 @@ const items = await Promise.all(learn.map(async (entry) => ({ entry, Content: (a
     <div class="grid2">
       <div class="panel">
         <h2>直近7日（分）</h2>
-        <StudyChart days={week} highlight={today} />
+        <StudyChart days={week} highlight={today} moods={moodByDay(feel)} />
       </div>
       <div class="panel">
         <h2>カテゴリ別・{Number(month.slice(5, 7))}月</h2>
